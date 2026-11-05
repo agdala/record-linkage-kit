@@ -603,6 +603,33 @@ no gabarito e as similaridades calculadas.</p>
 
 
 
+<h2>7. Modo pseudonimizado</h2>
+<div class="card scroll">
+<p>As duas bases trocam apenas hashes SHA-256 com sal secreto de chaves padronizadas. O
+pareamento passa a ser exato: qualquer diferença na chave impede o par.</p>
+<table>
+<thead><tr><th>Modo</th><th class="n">Pares aceitos</th><th class="n">Precisão</th><th class="n">Recall</th></tr></thead>
+<tbody>
+<tr><td>Aproximado (nomes em claro, limiar 0,85)</td><td class="n">1.726</td>
+<td class="n">99,3%</td><td class="n">95,2%</td></tr>
+
+<tr><td>Pseudonimizado: documento</td><td class="n">954</td>
+<td class="n">100,0%</td><td class="n">53,0%</td></tr>
+
+<tr><td>Pseudonimizado: nome + data de nascimento</td><td class="n">1.000</td>
+<td class="n">100,0%</td><td class="n">55,6%</td></tr>
+
+<tr><td>Pseudonimizado: nome fonético + data + nome fonético da mãe</td><td class="n">841</td>
+<td class="n">100,0%</td><td class="n">46,7%</td></tr>
+
+<tr><td>Pseudonimizado: nome fonético + ano + sexo + município</td><td class="n">1.047</td>
+<td class="n">100,0%</td><td class="n">58,2%</td></tr>
+
+<tr class="hl"><td>Pseudonimizado: cascata de chaves</td><td class="n">1.504</td>
+<td class="n">100,0%</td><td class="n">83,6%</td></tr>
+</tbody></table>
+</div>
+
 
 <footer>Gerado por <code>rlk evaluate</code> (record-linkage-kit). Métricas completas em
 <code>reports/metricas.json</code>.</footer>

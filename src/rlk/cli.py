@@ -9,6 +9,7 @@ from rlk.config import load_config
 from rlk.evaluate import run_evaluate
 from rlk.generate import GeneratorConfig, generate
 from rlk.link import run_link
+from rlk.pseudonymize import SaltError, run_pseudo
 
 
 def _cmd_generate(args: argparse.Namespace) -> int:
@@ -47,6 +48,20 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_pseudo(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    try:
+        r = run_pseudo(cfg)
+    except SaltError as exc:
+        print(f"Erro: {exc}", file=sys.stderr)
+        return 2
+    c = r["cascata"]
+    print(f"Pareamento pseudonimizado (hashes): {c['pares']} pares, precisão "
+          f"{c['precisao']:.2%}, recall {c['recall']:.2%}")
+    print(f"Hashes em {cfg['saida']}/pseudonimizado/ (sem nomes em claro)")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="rlk", description="Record linkage com governança de dados"
@@ -63,6 +78,10 @@ def build_parser() -> argparse.ArgumentParser:
     lk = sub.add_parser("link", help="padroniza, bloca, compara, pontua e classifica os pares")
     lk.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
     lk.set_defaults(func=_cmd_link)
+
+    ps = sub.add_parser("pseudo", help="cruzamento por hashes SHA-256 com sal (RLK_SALT)")
+    ps.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
+    ps.set_defaults(func=_cmd_pseudo)
 
     ev = sub.add_parser("evaluate", help="compara com o gabarito e gera o relatório HTML")
     ev.add_argument("--config", default="config/default.yaml", help="arquivo YAML")

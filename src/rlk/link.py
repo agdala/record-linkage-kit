@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -55,6 +56,29 @@ def side_by_side(pairs: pd.DataFrame, raw_1: pd.DataFrame, raw_2: pd.DataFrame,
     return out[["id_1", "id_2", "pontuacao", *ordered, *SIM_COLUMNS, "regras"]]
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def processing_record(cfg: dict, root: Path) -> dict:
+    """Minimal record of the linkage operation (what was crossed, with which rules).
+
+    File hashes prove which version of each base was used, without copying any content.
+    """
+    from rlk import __version__
+
+    canon = json.dumps({k: v for k, v in cfg.items() if k != "entrada"}, sort_keys=True)
+    return {
+        "versao_rlk": __version__,
+        "arquivos": {name: {"caminho": rel, "sha256": _sha256(root / rel)}
+                     for name, rel in cfg["entrada"].items()
+                     if name != "gabarito" and (root / rel).exists()},
+        "configuracao_sha256": hashlib.sha256(canon.encode("utf-8")).hexdigest(),
+        "campos_usados": sorted(cfg["pesos"]),
+        "regras_blocagem": [r["nome"] for r in cfg["blocagem"]],
+    }
+
+
 def run_link(cfg: dict, root: str | Path = ".") -> dict:
     root = Path(root)
     out_dir = root / cfg["saida"]
@@ -103,6 +127,7 @@ def run_link(cfg: dict, root: str | Path = ".") -> dict:
     pd.concat(unmatched, ignore_index=True).to_csv(out_dir / "nao_pareados.csv", index=False)
 
     summary = {
+        "registro": processing_record(cfg, root),
         "base_a": len(raw_a),
         "base_b": len(raw_b),
         "blocagem": stats,

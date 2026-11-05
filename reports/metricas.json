@@ -232,5 +232,53 @@
     "f1": 1.0,
     "completude_blocagem": 1.0,
     "taxa_reducao": 0.9906
+  },
+  "pseudonimizado": {
+    "por_chave": [
+      {
+        "chave": "k1_documento",
+        "descricao": "documento",
+        "pares": 954,
+        "vp": 954,
+        "precisao": 1.0,
+        "recall": 0.53
+      },
+      {
+        "chave": "k2_nome_data",
+        "descricao": "nome + data de nascimento",
+        "pares": 1000,
+        "vp": 1000,
+        "precisao": 1.0,
+        "recall": 0.5556
+      },
+      {
+        "chave": "k3_fonetica_data_mae",
+        "descricao": "nome fonético + data + nome fonético da mãe",
+        "pares": 841,
+        "vp": 841,
+        "precisao": 1.0,
+        "recall": 0.4672
+      },
+      {
+        "chave": "k4_fonetica_ano_municipio",
+        "descricao": "nome fonético + ano + sexo + município",
+        "pares": 1047,
+        "vp": 1047,
+        "precisao": 1.0,
+        "recall": 0.5817
+      }
+    ],
+    "cascata": {
+      "pares": 1504,
+      "vp": 1504,
+      "precisao": 1.0,
+      "recall": 0.8356
+    },
+    "por_chave_na_cascata": {
+      "k1_documento": 954,
+      "k2_nome_data": 474,
+      "k3_fonetica_data_mae": 29,
+      "k4_fonetica_ano_municipio": 47
+    }
   }
 }
