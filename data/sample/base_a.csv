@@ -1,0 +1,201 @@
+id,nome_completo,nome_mae,data_nascimento,sexo,municipio,uf,documento
+A00001,Anthony Gabriel Carvalho Guerra Cardoso,Ana Júlia Ferreira Carvalho,2010-09-23,M,Manaus,AM,072.108.862-73
+A00002,Ana Beatriz Pacheco Ribeiro Souza,Agatha Dias Pacheco,1995-08-14,F,São Paulo,SP,226.430.460-05
+A00003,Daniela Rengifo de Mosquera,Camila Monroy Rengifo,2001-06-03,F,Belo Horizonte,MG,793.358.432-29
+A00004,Jessica Paula Cuesta Gutiérrez,Lina Jenny Rojas Cuesta,1943-04-26,F,São Paulo,SP,539.732.349-73
+A00005,Lara da Albuquerque Nascimento,Natália da Rosa da Albuquerque,1977-05-03,F,São Paulo,SP,968.422.973-97
+A00006,Yair Robinson Torres Jiménez,Anyi Rosa Vásquez Torres,1976-04-24,M,Boa Vista,RR,809.366.076-37
+A00007,Néstor Villegas Andrade,Rosa Arango Villegas,2022-09-08,M,Caxias do Sul,RS,
+A00008,Mariah Cecília de Câmara Aparecida,Catarina Lavínia dos Novais de Câmara,2013-03-20,F,Porto Alegre,RS,555.615.107-54
+A00009,Sebastián de Acosta Hernández Domínguez,Tatiana da Velasco de Acosta,1940-07-22,M,Boa Vista,RR,870.145.214-20
+A00010,Alberto da Romero Alfonso,Omaira Rodríguez da Romero,1964-09-07,M,Campo Grande,MS,775.293.822-09
+A00011,Henry Machado Silveira Barros,Maria Clara da Ferreira Machado,1942-06-05,M,Belo Horizonte,MG,143.496.093-50
+A00012,João Gabriel Aparecida da Andrade,Juliana Ramos Aparecida,1953-12-06,M,Curitiba,PR,680.110.201-02
+A00013,Franco Murillo Sánchez Ramírez,Elsy Olga de Martínez Murillo,2021-03-06,M,Campinas,SP,065.478.010-20
+A00014,Lorena Alana Sales Jesus,Agatha Albuquerque Sales,2013-06-17,F,Chapecó,SC,
+A00015,Carmen Valencia Guzmán Pérez,Consuelo Carolina González Valencia,1958-05-23,F,Manaus,AM,136.007.980-73
+A00016,Ana Sophia Barbosa Rios,Mariane da Costa Barbosa,2021-02-15,F,Curitiba,PR,231.796.321-19
+A00017,Kamilly Campos Cardoso,Allana Melo Campos,2007-09-17,F,Caxias do Sul,RS,727.107.787-18
+A00018,Bento Azevedo Pereira,Maysa Ferreira Azevedo,1954-12-07,M,Boa Vista,RR,
+A00019,Alana Pastor Cirino,Larissa da Luz Pastor,1954-12-04,F,Campinas,SP,156.318.967-45
+A00020,Davi Nascimento Moraes,Fernanda Maria de Casa Grande Nascimento,2003-04-20,M,Campinas,SP,155.009.444-01
+A00021,Paola Adiela Torres dos Burgos,Dayana María Hernández Torres,2021-08-12,F,Curitiba,PR,316.053.050-73
+A00022,Mateus Fogaça Cirino,Lívia Abreu Fogaça,1965-01-13,M,Boa Vista,RR,026.270.815-94
+A00023,Benjamim Leonardo da Paz Rios,Maria Vitória das Neves da Paz,2023-07-30,M,Boa Vista,RR,784.078.634-08
+A00024,Lucas Garcia dos Freitas,Clara Maria Oliveira Garcia,2014-04-11,M,Florianópolis,SC,
+A00025,Luiz Felipe Casa Grande da Mota,Sara Novaes Casa Grande,1961-09-29,M,Belo Horizonte,MG,554.377.930-57
+A00026,Luan Farias Duarte,Isabelly Pereira Farias,1994-06-12,M,Boa Vista,RR,249.005.497-03
+A00027,Sofia Casa Grande Porto,Melina Almeida Casa Grande,1963-09-23,F,São Paulo,SP,310.851.492-00
+A00028,Manuel Cano Vargas,Stella Marleny Guerra Cano,1972-10-10,M,Boa Vista,RR,
+A00029,Lorenzo Costa Freitas,Melissa Evelyn Nogueira Costa,1948-02-20,M,Pacaraima,RR,380.487.000-77
+A00030,Clarice Melo de Castro da Cruz,Alice Carvalho Melo,1949-02-04,F,Brasília,DF,401.628.908-42
+A00031,Anthony Correia Pacheco,Gabriela das Neves Correia,1978-03-15,M,São Paulo,SP,074.708.388-64
+A00032,Sophie da Ferreira Ramos Peixoto,Bárbara Ana Cavalcante da Ferreira,1950-11-30,F,Natal,RN,905.945.895-84
+A00033,Uriel L. García Restrepo,Nora Salas García,1955-09-01,M,Curitiba,PR,
+A00034,Guilherme da Paz Cavalcante,Agatha Valentina Lopes da Paz,2023-06-27,M,Pacaraima,RR,270.306.895-69
+A00035,José Miguel Sousa Duarte,Nicole Maysa Cavalcante Sousa,1996-07-01,M,Campo Grande,MS,514.821.378-79
+A00036,Isabel Antonella Gonçalves de Almeida Pires,Liz da Rosa Gonçalves,1945-12-23,F,Manaus,AM,557.678.339-58
+A00037,Vinícius Luiz Castro Moreira,Gabrielly Almeida Castro,1958-09-23,M,Guarulhos,SP,150.598.623-05
+A00038,Sophia Leão Pires da Rocha,Valentina Castro Leão,1943-01-05,F,Pacaraima,RR,284.051.567-98
+A00039,João Lucas Fonseca Cardoso,Sophia Pereira Fonseca,1998-12-28,M,Belém,PA,872.840.044-52
+A00040,Pedro Lucas Aragão Câmara,Ana Clara Gonçalves Aragão,2004-08-28,M,Pacaraima,RR,
+A00041,Larissa Vasconcelos de Muora,Giovanna Novaes Vasconcelos,1959-06-06,F,Esteio,RS,
+A00042,Francisco Pablo Paz González,María de Anaya Paz,1978-06-13,M,Vitória,ES,180.754.954-20
+A00043,Mariah dos Lopes Dias,Beatriz da Luz dos Lopes,1945-09-17,F,Itajaí,SC,247.184.085-04
+A00044,Ana Julia dos Novaes dos Novaes,Anna Liz Costela dos Novaes,1973-10-15,F,Cuiabá,MT,946.184.951-62
+A00045,Valentina Montenegro da Cardoso,Clarice Nascimento Montenegro,1956-01-06,F,Guarulhos,SP,587.671.161-67
+A00046,João Pedro Camargo Correia,Rebeca Cardoso Camargo,1955-07-16,M,Manaus,AM,991.790.371-27
+A00047,Nathan Nunes Moreira,Bárbara Mariah Aparecida Nunes,2001-10-31,M,Rio de Janeiro,RJ,403.599.441-32
+A00048,Guilherme Sousa Aparecida,Maria Clara Azevedo Sousa,1940-04-24,M,Joinville,SC,888.089.912-02
+A00049,Marcela Ramírez Serrano,Martha María López Ramírez,1998-01-21,F,Florianópolis,SC,107.123.804-34
+A00050,Calebe Caldeira Pires,Maria Alice Duarte Caldeira,1943-04-21,M,Pacaraima,RR,438.080.229-90
+A00051,Alexander Cortés Galvis,Blanca Luna Cortés,1981-07-20,M,Guarulhos,SP,621.006.190-71
+A00052,Rubén Pérez Moreno,Carolina Rosa dos Morales Pérez,1973-07-22,M,Campo Grande,MS,398.518.689-81
+A00053,Otto Leandro Peixoto Marques,Lorena Novaes Peixoto,2023-04-06,M,Curitiba,PR,
+A00054,Pietro Oliveira da Rosa,Sabrina Manuela Moura Oliveira,1947-05-06,M,Florianópolis,SC,291.471.406-82
+A00055,Kaique Pedro Brito Casa Grande,Alana Fernanda Dias Brito,1971-10-29,M,Belo Horizonte,MG,
+A00056,Gina Quintero Barrios,Camila Zapata Quintero,1940-03-03,F,Curitiba,PR,358.078.685-79
+A00057,Uriel Luis García Restrepo,Nora Salas García,1955-09-01,M,Curitiba,PR,926.371.930-69
+A00058,Miguel Murilo Marques Vasconcelos,Maria Júlia Rodrigues Marques,2019-04-29,M,São Paulo,SP,
+A00059,Ágatha Alana Mendonça da Cruz,Eloah Monteiro Mendonça,1962-02-13,F,Pacaraima,RR,136.424.496-97
+A00060,Kevin Costa Gomes,Clara Cassiano Costa,1999-07-18,M,Belém,PA,741.612.303-89
+A00061,Emanuel Benjamin Alves da Guerra,Isabela Cirino Alves,1940-07-11,M,Guarulhos,SP,916.614.566-00
+A00062,Thales da Cruz Machado,Marina Caldeira da Cruz,1941-09-30,M,São Paulo,SP,589.322.187-73
+A00063,Clara Pinto Freitas Cavalcante,Sofia Sousa Pinto,1957-07-23,F,São Paulo,SP,311.037.783-74
+A00064,Anthony Gabriel da Cunha Rezende,Liz Catarina Souza da Cunha,1964-02-19,M,Guarulhos,SP,449.024.724-90
+A00065,Kaique Pedro Brito Casa Grande,Alana Fernanda Dias Brito,1971-10-29,M,Belo Horizonte,MG,713.214.121-00
+A00066,Fernanda Valentina de Díaz Murillo,Dahiana Hernández de Díaz,1968-01-13,F,Rio de Janeiro,RJ,825.429.271-03
+A00067,Diego Oliver Casa Grande Gonçalves Alves,Hadassa Aragão Casa Grande,1980-06-12,M,Chapecó,SC,003.887.993-07
+A00068,Gustavo Henrique Jesus Gomes,Valentina Jesus Jesus,1995-05-09,M,Joinville,SC,330.291.568-34
+A00069,Arthur Miguel Rocha Albuquerque,Evelyn Martins Rocha,1972-02-12,M,Manaus,AM,180.637.799-32
+A00070,Vinicius Almeida Albuquerque,Bella Silveira Almeida,1971-05-11,M,Fortaleza,CE,719.180.257-03
+A00071,Maria Clara da Paz Campos,Gabriela da Cunha da Paz,2015-04-02,F,Manaus,AM,422.234.189-45
+A00072,Angie Murillo Díaz,Inés María Manrique Murillo,1958-08-25,F,Curitiba,PR,857.373.807-34
+A00073,Luiz Felipe da Rosa Siqueira,Maria Vitória Casa Grande da Rosa,1965-06-29,M,Rio de Janeiro,RJ,
+A00074,Mariane Cecilia Novaes da Câmara,Lívia Milena Machado Novaes,2005-06-06,F,Rio de Janeiro,RJ,521.533.820-50
+A00075,Danilo Pereira Fonseca,Camila Melo Pereira,1944-11-04,M,Campinas,SP,894.401.328-41
+A00076,Davi Lucas Montenegro Cavalcante Marques,Isabel Garcia Montenegro,1997-01-31,M,Campo Grande,MS,577.633.186-27
+A00077,Leidy Elena Hernández Mendoza,Edith Bonilla Hernández,2010-11-25,F,Campo Grande,MS,732.079.690-20
+A00078,Yan João Novaes da Mota,Marina Carvalho Novaes,1994-10-22,M,Boa Vista,RR,796.320.160-09
+A00079,Ayla Costela Guerra,Yasmin Eloah de Vieira Costela,1970-12-09,F,Vitória,ES,687.816.574-12
+A00080,Bianca Garcia Oliveira da Rocha,Ana Liz Sá Garcia,1965-12-09,F,Manaus,AM,945.550.921-04
+A00081,Camilo Mejía Moreno,Inés Peña Mejía,1971-12-28,M,Pacaraima,RR,795.304.205-36
+A00082,Concepción Ávila Gamboa,Jimena Villamizar Ávila,1984-06-23,F,Chapecó,SC,
+A00083,Mateus Viana da Mota,Brenda Pinto Viana,1940-02-25,M,Manaus,AM,
+A00084,Rafael Fernández Gutiérrez,María Luz López Fernández,1948-01-20,M,Boa Vista,RR,993.990.072-43
+A00085,Anna Liz Almeida Correia,Mariah Monteiro Almeida,1941-01-19,F,Belém,PA,269.203.461-92
+A00086,Juliana da Paz Porto,Isadora Cassiano da Paz,1941-06-10,F,Goiânia,GO,437.740.748-10
+A00087,Pietra Fonseca dos Marques,Liz Novaes Fonseca,2023-08-24,F,Belém,PA,432.253.503-89
+A00088,Sarah Pimenta da Mota da Cunha,Cecília Marques Pimenta,2015-06-09,F,Manaus,AM,945.623.146-13
+A00089,Dario Daniel Zapata Ortega,Luz Sánchez Zapata,1977-02-17,M,Rio de Janeiro,RJ,
+A00090,Laís Nicole da Vieira Lopes,Hellena Sarah Sales da Vieira,1994-12-14,F,Blumenau,SC,
+A00091,Caleb da Abreu Lopes de Camargo,Mariana Castro da Abreu,1971-07-13,M,São Paulo,SP,484.105.690-43
+A00092,Mauricio de Pinto Calderón,Fernanda dos Morales de Pinto,2013-02-03,M,Boa Vista,RR,053.554.313-13
+A00093,Maria Alice da Castro Sampaio,Alana Freitas da Castro,1982-07-28,F,Belo Horizonte,MG,545.178.837-52
+A00094,Nubia de Chacón Cáceres,Patricia Viviana Serna de Chacón,1941-02-08,F,Chapecó,SC,155.756.854-54
+A00095,Leonardo Rezende Albuquerque,Cecilia Freitas Rezende,1967-03-13,M,Manaus,AM,523.434.690-08
+A00096,Isis Mariane da Conceição da Mata Rodrigues,Maria Flor Santos da Conceição,1961-03-07,F,Cuiabá,MT,648.736.346-44
+A00097,Gabriel Guerra Rezende,Daniela Novais Guerra,1957-04-02,M,Boa Vista,RR,944.693.581-42
+A00098,Adriana Ana Bolívar Granados,Claudia Hernández Bolívar,1975-03-01,F,Campinas,SP,256.963.419-00
+A00099,Esther Rojas Bedoya,Lorena Cruz Rojas,1993-04-28,F,Curitiba,PR,698.236.041-50
+A00100,Davi dos Farias Guerra,Ana Luiza Rezende dos Farias,1952-11-03,M,Santarém,PA,495.343.420-09
+A00101,Julia da Paz Sales,Luna Abreu da Paz,1992-05-15,F,Campo Grande,MS,219.772.189-54
+A00102,María Mosquera Arévalo Puentes,Sonia Mora Mosquera,1983-08-01,F,Manaus,AM,222.349.880-98
+A00103,José Pedro Nunes Mendonça,Hadassa Pastor Nunes,2008-06-04,M,Rio Branco,AC,920.456.183-15
+A00104,Jade Gonçalves Martins,Gabrielly Santos Gonçalves,2000-07-30,F,Porto Alegre,RS,
+A00105,Johana Sánchez Contreras,María Yesenia Palacios Sánchez,2004-03-30,F,Itajaí,SC,992.196.524-71
+A00106,Rafaela Barbosa da Costela dos Novaes,Sabrina de Andrade Barbosa,1945-05-24,F,Pacaraima,RR,013.560.164-99
+A00107,Giovanny Rivera de Méndez,Patricia Maritza Gómez Rivera,2003-08-30,M,Rio de Janeiro,RJ,428.906.654-29
+A00108,Natália da Barbosa da Luz da Conceição,Gabrielly da Costa da Barbosa,1999-09-06,F,Cuiabá,MT,434.676.601-34
+A00109,Thiago Guilherme da Luz Moreira,Pietra Duarte da Luz,1943-06-03,M,Manaus,AM,111.735.451-23
+A00110,Carmen Parra Pabón,Luz Rivera Parra,1940-05-14,F,Boa Vista,RR,559.602.369-82
+A00111,Clarice Zoe Lima Rocha,Maria Luiza da Luz Lima,1982-11-20,F,Curitiba,PR,957.006.409-96
+A00112,Camilo Castellanos Martínez,Margarita Viviana da Murcia Castellanos,1974-07-20,M,Boa Vista,RR,300.932.133-36
+A00113,María Calderón Leal,Cecilia Arango Calderón,1963-10-20,F,Manaus,AM,874.976.747-06
+A00114,Antonella Nogueira Pimenta,Clara Garcia Nogueira,1949-05-19,F,Joinville,SC,264.711.079-43
+A00115,Pedro Nascimento da Pinto,Stella Stella Lopes Nascimento,2009-04-10,M,Boa Vista,RR,335.396.503-34
+A00116,Clarice Silveira Castro,Carolina Ana Cavalcante Silveira,1971-11-25,F,Rio de Janeiro,RJ,546.654.915-00
+A00117,Brenda Cavalcante Casa Grande,Amanda Andrade Cavalcante,2009-10-21,F,Manaus,AM,193.100.666-01
+A00118,Anthony Gabriel da Mota Garcia,Ana Liz da Guerra da Mota,1981-09-27,M,Boa Vista,RR,096.651.349-57
+A00119,Jade Maria Silveira Câmara,Ana Carolina Cavalcanti Silveira,1960-04-10,F,Goiânia,GO,050.925.774-79
+A00120,Luan Brito Montenegro Macedo,Ana Ana Machado Brito,1998-04-14,M,Boa Vista,RR,655.645.496-60
+A00121,Kamilly Rios Fogaça,Gabriela Carvalho Rios,2010-05-23,F,Rio de Janeiro,RJ,857.774.779-41
+A00122,Valentina Montenegro da Cardoso,Clarice Nascimento Montenegro,1956-01-06,F,Guarulhos,SP,
+A00123,Luz Mosquera Torres,Inés Ramírez Mosquera,1941-12-15,F,Boa Vista,RR,249.932.449-08
+A00124,Arthur Gabriel de Cirino Rezende,Nina Moura de Cirino,2006-04-11,M,Vitória,ES,378.941.004-71
+A00125,João Miguel Moraes da Luz,Eduarda Oliveira Moraes,1952-11-17,M,Manaus,AM,
+A00126,Victoria Contreras Velasco,María Ortiz Contreras,1977-06-26,F,Salvador,BA,855.654.100-37
+A00127,David Giraldo Mejía,Luz Ocampo Giraldo,1994-01-03,M,Curitiba,PR,471.241.063-97
+A00128,Maria Fernanda Aparecida da Monteiro,Bianca Freitas Aparecida,1997-05-08,F,Brasília,DF,
+A00129,Isabela Araújo Rezende Casa Grande,Luna Albuquerque Araújo,1960-12-02,F,Itajaí,SC,312.095.343-12
+A00130,Alvaro Arroyo da Martinez,Liliana Beltrán Arroyo,1947-09-15,M,Boa Vista,RR,253.002.269-04
+A00131,Maria Julia Castro Souza,Evelyn Duarte Castro,1982-06-06,F,Pacaraima,RR,329.666.948-58
+A00132,Antony Caldeira das Neves,Ana da Cunha Caldeira,1984-02-27,M,Brasília,DF,
+A00133,José Torres Silva,Paula de Sarmiento Torres,1960-05-06,M,Curitiba,PR,890.211.959-92
+A00134,Heloísa Emanuella Oliveira Cirino,Emilly Stephany Carvalho Oliveira,1993-10-16,F,Campo Grande,MS,100.642.267-60
+A00135,Alberto López Bolaños,Tatiana Dayana Tovar López,1976-12-11,M,Caxias do Sul,RS,952.869.148-02
+A00136,Anthony Ribeiro Cirino,Lunna da Rezende Ribeiro,1993-12-30,M,Recife,PE,349.051.795-48
+A00137,Adolfo Ocampo Alzate,Teresa Giraldo Ocampo,1951-12-30,M,Pacaraima,RR,866.865.211-75
+A00138,Mariela Ortiz Guerrero Jiménez,Fabiola Marcela González Ortiz,1997-06-23,F,Brasília,DF,465.069.745-08
+A00139,Diana Narváez Quiroga,Tatiana Benítez Narváez,2021-11-11,F,Boa Vista,RR,192.802.917-50
+A00140,Rosa Fernanda Bonilla Toro,María da Ávila Bonilla,2008-07-11,F,Boa Vista,RR,246.678.618-43
+A00141,Jesús Pedro Rincón dos Morales,Lina Benítez Rincón,1969-08-24,M,Brasília,DF,409.482.183-04
+A00142,Juan Jhon Salazar Rivera,Cindy de Palacio Salazar,1963-06-30,M,Boa Vista,RR,176.088.678-50
+A00143,Fernanda Júlia Cassiano da Costa Borges,Caroline Santos Cassiano,1973-06-21,F,Belém,PA,575.472.324-50
+A00144,Gloria Aguilar Vanegas Jiménez,Cecilia Carvajal Aguilar,1972-08-08,F,Pacaraima,RR,852.214.041-33
+A00145,Bernardo Porto Borges,Antonella Hellena da Luz Porto,1977-05-18,M,Boa Vista,RR,210.949.607-05
+A00146,Luana Luana Albuquerque da Rezende Gomes,Anna Liz Rodrigues Albuquerque,1966-09-06,F,Guarulhos,SP,
+A00147,Olívia Sofia Pires Pacheco,Letícia de Costela Pires,2013-11-03,F,Manaus,AM,286.995.495-63
+A00148,Ayla Lopes Leão,Isabella de Azevedo Lopes,1992-04-20,F,Salvador,BA,505.965.050-27
+A00149,Maria Laura Martins Câmara,Aylla da Souza Martins,2009-08-15,F,Brasília,DF,816.279.443-38
+A00150,Luiza de Brito da Vieira da Rocha,Gabrielly Sá de Brito,1985-03-17,F,Belém,PA,323.907.976-36
+A00151,Carolina Marcela Narváez Torres,María Vargas Narváez,1999-11-30,F,Cuiabá,MT,628.900.595-29
+A00152,Luz Mosquera Torres,Inés Ramírez Mosquera,1941-12-15,F,Boa Vista,RR,249.932.449-08
+A00153,Caroline Câmara dos Gonçalves,Hadassa Eloah Martins Câmara,2007-04-03,F,Porto Velho,RO,907.167.816-46
+A00154,Gloria Escobar Padilla,Isabel Rangel Escobar,1992-08-11,F,Manaus,AM,892.598.114-90
+A00155,Carolina González Medina,Rosa Zoraida Gómez González,1943-07-14,F,Goiânia,GO,262.439.409-50
+A00156,Lunna Elisa Andrade Mendes,Ísis Novaes Andrade,1989-06-23,F,Belo Horizonte,MG,989.200.474-48
+A00157,Erika Nathalia Rubio Escobar,Esmeralda Triana Rubio,1976-02-09,F,Brasília,DF,144.156.795-01
+A00158,Joana Leão Fernandes da Cunha,Letícia da Paz Leão,2011-07-25,F,Boa Vista,RR,424.616.058-07
+A00159,Ester da Cruz Sales Marques,Ana Clara da Rocha da Cruz,1964-04-05,F,Rio de Janeiro,RJ,142.995.293-83
+A00160,Heloísa Carvalho Nogueira,Heloísa Pastor Carvalho,2002-06-23,F,Porto Alegre,RS,157.189.348-27
+A00161,Thomas Cardoso Barros,Luara de Siqueira Cardoso,1954-06-01,M,Vitória,ES,078.670.066-13
+A00162,Maria Sophia Melo da Paz,Ana Pinto Melo,1957-05-18,F,Boa Vista,RR,050.405.785-55
+A00163,Brayan Pérez Vergara,Diana Bastidas Pérez,2012-02-06,M,Boa Vista,RR,155.888.586-20
+A00164,Alicia da Rodríguez Hernández,Alexandra da Giraldo da Rodríguez,1960-10-03,F,Curitiba,PR,661.055.326-28
+A00165,Andrés Jiménez Díaz,Luz Zambrano Jiménez,2013-02-19,M,Pacaraima,RR,503.019.667-61
+A00166,Santiago Monsalve de Hernández,Luz Cabrera Monsalve,2010-05-12,M,Belo Horizonte,MG,033.473.529-71
+A00167,Isabelly de Guerra Silva,Alícia Mendonça de Guerra,2007-12-29,F,Blumenau,SC,
+A00168,María de Bermúdez Trujillo,Johanna Sánchez de Bermúdez,2022-10-15,F,Boa Vista,RR,277.246.235-89
+A00169,Julia Aragão da Mata,Maya Stephany Porto Aragão,1968-03-20,F,Boa Vista,RR,298.051.982-00
+A00170,Dante Montenegro de Ferreira Vieira,Sabrina Costela Montenegro,1948-08-01,M,Curitiba,PR,332.567.078-40
+A00171,Álvaro Arroyo da Martínez,Liliana Beltrán Arroyo,1947-09-15,M,Boa Vista,RR,253.002.269-04
+A00172,Lunna Stella Duarte Guerra,Ana Júlia Novais Duarte,1963-02-23,F,Campo Grande,MS,163.860.113-50
+A00173,Luan Cassiano Silveira,Isadora Cassiano Cassiano,1979-09-05,M,Manaus,AM,632.929.916-17
+A00174,Alexander Jorge Meza Ramírez,Yina Estela Arias Meza,2019-04-28,M,Santarém,PA,233.727.089-03
+A00175,Clara Sousa Araújo,Milena Cirino Sousa,1946-06-17,F,Porto Alegre,RS,414.205.282-97
+A00176,Gabriela Ramos Barros,Bárbara Maria Ribeiro Ramos,1987-10-12,F,Cascavel,PR,417.389.349-34
+A00177,Pietra Casa Grande Camargo,Elisa Maria Fonseca Casa Grande,1979-03-01,F,Caxias do Sul,RS,379.752.097-24
+A00178,Andrea Suárez Rodríguez,Carolina Cabrera Suárez,1998-11-24,F,Curitiba,PR,620.131.856-93
+A00179,Luiz Fernando Teixeira Novais,Luara Manuela da Oliveira Teixeira,2023-09-23,M,Curitiba,PR,554.894.607-25
+A00180,Ágatha de Cavalcante Fogaça Nascimento,Heloisa Vargas de Cavalcante,1973-10-02,F,Boa Vista,RR,732.898.887-89
+A00181,José Pedro Freitas Moraes,Melissa Cavalcanti Freitas,1958-05-30,M,Curitiba,PR,760.673.030-00
+A00182,Samuel Alexandre Andrade Lima Pastor,Olívia Santos Andrade,1957-11-16,M,Manaus,AM,099.544.721-77
+A00183,Jade da Rocha da Mota,Juliana Maria Nunes da Rocha,1940-12-08,F,Cascavel,PR,712.218.533-84
+A00184,Dom Isaac Cirino Albuquerque,Liz da Sousa Cirino,1949-10-13,M,Pacaraima,RR,333.701.720-70
+A00185,Anthony Moura Ferreira,Alice de Porto Moura,1991-03-02,M,Dourados,MS,202.658.147-90
+A00186,Davi Dom Moreira Castro,Maria Alice Gomes Moreira,1945-11-10,M,Boa Vista,RR,278.057.081-42
+A00187,Dom da Peixoto Farias,Alice Pereira da Peixoto,1978-07-31,M,Caxias do Sul,RS,634.836.688-02
+A00188,Milena Delgado Pineda,Socorro Yepes Delgado,1995-05-09,F,Boa Vista,RR,868.661.450-74
+A00189,Ancizar Pulido da Gómez,Lizeth Paz Pulido,2010-06-09,M,Fortaleza,CE,729.412.469-83
+A00190,Samuel Pires Nascimento,Isabelly Rodrigues Pires,1997-01-20,M,Boa Vista,RR,240.980.574-41
+A00191,Wilson Ávila Benítez,Vilma Duque Ávila,1943-04-28,M,Boa Vista,RR,456.825.873-16
+A00192,Sara Nunes Araújo,Gabrielly de Pinto Nunes,1987-09-14,F,São Paulo,SP,643.542.762-32
+A00193,Joel Johan Mora Castro,Adriana Gloria Campo Mora,2013-03-05,M,Belém,PA,684.753.260-21
+A00194,Léo Cirino Garcia Andrade,Ana Ana Barros Cirino,1996-05-22,M,Caxias do Sul,RS,849.905.319-06
+A00195,Rael Garcia Lopes,Nina Anna Souza Garcia,1946-01-07,M,Boa Vista,RR,192.618.992-26
+A00196,Vilma Nieto Galvis,Blanca Acosta Nieto,1956-12-24,F,Manaus,AM,067.492.970-56
+A00197,Larissa Vasconcelos de Moura,Giovanna Novaes Vasconcelos,1959-06-06,F,Esteio,RS,445.828.452-58
+A00198,Ana Luiza Sousa da Rocha,Maria Fernanda da Cunha Sousa,1986-01-08,F,Joinville,SC,395.342.018-63
+A00199,Bryan Rodrigues Caldeira,Natália Silveira Rodrigues,1958-10-28,M,Porto Velho,RO,507.296.312-81
+A00200,Felipe Teixeira Pinto,Natália Vasconcelos Teixeira,1972-06-18,M,Belo Horizonte,MG,840.338.560-99
