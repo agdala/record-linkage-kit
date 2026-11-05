@@ -345,6 +345,15 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 
 ## 8. Limitações
 
+- **Avaliação otimista: o gerador e o modelo foram criados pela mesma autora.** Os tipos de erro
+  do gerador, os pesos, os níveis de comparação e as regras de blocagem foram desenhados pela mesma
+  pessoa, sabendo quais erros existiam. O limiar de 0,90 também foi escolhido olhando para esses
+  mesmos dados. Por isso o desempenho medido tende a ser **otimista** em relação a dados reais, que
+  têm padrões de erro não previstos (transliteração de nomes, troca de nome após casamento,
+  registros de terceiros, documentos digitados errado). Mitigações previstas: estimar os pesos pelo
+  modelo **Fellegi-Sunter com o algoritmo EM**, a partir dos próprios dados e sem o gabarito, e
+  **comparar com o Splink** nas mesmas bases (seção 9). Numa base real, a referência deve ser uma
+  amostra rotulada por revisores, separada da usada para calibrar.
 - **Dados sintéticos são mais regulares que os reais.** As taxas de erro foram escolhidas, não
   medidas em bases reais; os números servem para comparar métodos, não para prometer resultados.
 - **Pesos e limiares definidos à mão.** Não foram estimados dos dados (como no modelo
