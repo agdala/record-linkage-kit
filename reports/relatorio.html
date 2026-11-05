@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relatório de record linkage</title>
+<meta name="description" content="Record linkage e deduplicação de bases cadastrais com dados 100% sintéticos: precisão, recall, blocagem, fila de revisão e modo pseudonimizado.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="record-linkage-kit · Agda Santos">
+<meta property="og:title" content="Record linkage de bases cadastrais: cruzamento, deduplicação e revisão">
+<meta property="og:description" content="Precisão de 99,8% nos pares automáticos, recall de 99,4% após a revisão e 99,07% menos comparações com blocagem, em dados 100% sintéticos.">
+<meta property="og:url" content="https://agdala.github.io/record-linkage-kit/">
+<meta property="og:image" content="https://agdala.github.io/record-linkage-kit/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="record-linkage-kit, etapa Integrar do ciclo de dados, com os números-chave do relatório">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root {
   color-scheme: light;
@@ -13,7 +25,7 @@
   --grid: #ebeae6;
   --text-primary: #0b0b0b;
   --text-secondary: #52514e;
-  --text-muted: #77766f;
+  --text-muted: #6b6a64;
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
@@ -82,6 +94,9 @@ p { margin: 0 0 12px; color: var(--text-secondary); max-width: 72ch; }
   padding: 16px; margin: 12px 0;
 }
 .scroll { overflow-x: auto; }
+.scroll:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+.dica-rolagem { display: none; font-size: 13px; }
+@media (max-width: 700px) { .dica-rolagem { display: block; } }
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { padding: 6px 10px; border-bottom: 1px solid var(--grid); text-align: left; }
 th { color: var(--text-secondary); font-weight: 600; }
@@ -155,9 +170,12 @@ qualquer registro de A da mesma pessoa.</p>
   <span><i style="background: var(--series-1)"></i>Precisão</span><span><i style="background: var(--series-2)"></i>Recall</span><span><i style="background: var(--series-3)"></i>F1</span>
   <span><i style="background: var(--text-muted); height: 1px"></i>limiares configurados</span>
 </div>
-<div class="chart-wrap scroll" id="chart">
+<p class="dica-rolagem">Em telas estreitas, arraste o gráfico para os lados para vê-lo inteiro.</p>
+<div class="chart-wrap scroll" id="chart" tabindex="0" role="region" aria-label="Gráfico: precisão, recall e F1 por limiar">
 <svg viewBox="0 0 720 320" width="100%" role="img"
-     aria-label="Precisão, recall e F1 por limiar de pontuação" style="min-width: 520px; display: block">
+     aria-labelledby="grafico-limiar-titulo grafico-limiar-desc" style="min-width: 660px; display: block">
+  <title id="grafico-limiar-titulo">Precisão, recall e F1 por limiar de pontuação</title>
+  <desc id="grafico-limiar-desc">Linhas de precisão, recall e F1 para 10 limiares de pontuação, de 0,50 a 0,95, com marcas nos limiares de revisão (0,70) e de match (0,90). No limiar de match: precisão 99,8%, recall 94,8% e F1 97,2%. Os valores de cada limiar estão na tabela abaixo do gráfico.</desc>
   
   <line x1="52" x2="636" y1="280.0" y2="280.0" stroke="var(--grid)" stroke-width="1"/>
   <text x="44" y="284.0" text-anchor="end">60%</text>
@@ -315,7 +333,7 @@ qualquer registro de A da mesma pessoa.</p>
 </div>
 </div>
 
-<div class="card scroll">
+<div class="card scroll" tabindex="0" role="region" aria-label="Tabela: métricas por limiar">
 <table>
 <thead><tr><th class="n">Limiar</th><th class="n">Pares aceitos</th><th class="n">VP</th><th class="n">FP</th>
 <th class="n">FN</th><th class="n">Precisão</th><th class="n">Recall</th><th class="n">F1</th></tr></thead>
@@ -379,7 +397,7 @@ FN: registros de B com par que ficaram sem o par correto. Linha destacada: limia
 <h2>3. Blocagem</h2>
 <p>Cada regra compara só registros com os mesmos valores nas chaves; o conjunto de candidatos é a
 união das regras. A completude de cada regra mostra quantos pares verdadeiros ela alcança sozinha.</p>
-<div class="card scroll">
+<div class="card scroll" tabindex="0" role="region" aria-label="Tabela: blocagem por regra">
 <table>
 <thead><tr><th>Regra</th><th class="n">Pares candidatos</th><th class="n">Completude dos pares</th></tr></thead>
 <tbody>
@@ -413,7 +431,7 @@ aumenta a fila; a tabela da seção 2 mostra essa troca.</p>
 <h3 style="margin-top: 20px">Recall por tipo de erro introduzido</h3>
 <p>Registros de B com par verdadeiro, separados pelo erro que receberam na geração (um registro
 pode ter vários erros). Ordenado do mais difícil para o mais fácil.</p>
-<div class="card scroll">
+<div class="card scroll" tabindex="0" role="region" aria-label="Tabela: recall por tipo de erro">
 <table>
 <thead><tr><th>Erro</th><th class="n">Registros</th><th class="n">Recall automático</th><th class="n">Recall com revisão</th></tr></thead>
 <tbody>
@@ -459,7 +477,7 @@ pode ter vários erros). Ordenado do mais difícil para o mais fácil.</p>
 
 
 <h2>5. Deduplicação da base A</h2>
-<div class="card scroll">
+<div class="card scroll" tabindex="0" role="region" aria-label="Tabela: deduplicação da base A">
 <table>
 <tbody>
 <tr><td>Duplicatas verdadeiras (gabarito)</td><td class="n">150</td></tr>
@@ -476,7 +494,7 @@ pode ter vários erros). Ordenado do mais difícil para o mais fácil.</p>
 <p>Selecionados automaticamente a partir dos resultados; os comentários usam os erros registrados
 no gabarito e as similaridades calculadas.</p>
 
-<div class="card case scroll">
+<div class="card case scroll" tabindex="0" role="region" aria-label="Caso difícil 1">
 <h3>1. Falso positivo aceito automaticamente</h3>
 <div class="meta">A02065 × B02047 · pontuação 0,926</div>
 <table>
@@ -501,7 +519,7 @@ no gabarito e as similaridades calculadas.</p>
 <p style="margin-top: 10px">Pessoas diferentes com mesma mãe, mesma data de nascimento e mesmo município: o perfil de gêmeos. Só o primeiro nome difere (similaridade do nome 0.82). Nenhum limiar separa esse caso sem documento: é a razão para exigir documento ou revisão humana quando a mãe e a data coincidem e o primeiro nome não.</p>
 </div>
 
-<div class="card case scroll">
+<div class="card case scroll" tabindex="0" role="region" aria-label="Caso difícil 2">
 <h3>2. Par verdadeiro na fila de revisão</h3>
 <div class="meta">A00952 × B02589 · pontuação 0,794</div>
 <table>
@@ -526,7 +544,7 @@ no gabarito e as similaridades calculadas.</p>
 <p style="margin-top: 10px">Mesma pessoa com dia e mês trocados (nível de data: so_ano). Erros introduzidos: sobrenomes em outra ordem, dia e mês trocados, data aproximada (01/01). A pontuação cai para a faixa de revisão: o revisor confirma pelo nome da mãe e pelo município.</p>
 </div>
 
-<div class="card case scroll">
+<div class="card case scroll" tabindex="0" role="region" aria-label="Caso difícil 3">
 <h3>3. Nome reordenado ou abreviado</h3>
 <div class="meta">A01856 × B01269 · pontuação 0,735</div>
 <table>
@@ -551,7 +569,7 @@ no gabarito e as similaridades calculadas.</p>
 <p style="margin-top: 10px">Erros introduzidos: sobrenomes em outra ordem, data aproximada (01/01), mudou de município. A comparação com tokens ordenados recupera parte da similaridade (nome 1.00). Resultado: enviado à revisão.</p>
 </div>
 
-<div class="card case scroll">
+<div class="card case scroll" tabindex="0" role="region" aria-label="Caso difícil 4">
 <h3>4. Perdido na blocagem</h3>
 <div class="meta">A00227 × B02049 · pontuação 0,000</div>
 <table>
@@ -576,7 +594,7 @@ no gabarito e as similaridades calculadas.</p>
 <p style="margin-top: 10px">O par nunca foi comparado: nenhuma regra de blocagem coincidiu. Erros introduzidos: erro de digitação no nome, data ausente. Quando o primeiro nome tem erro de digitação e a data ou a UF mudam, as três chaves falham ao mesmo tempo. Uma regra extra (por exemplo, documento) recuperaria parte desses casos.</p>
 </div>
 
-<div class="card case scroll">
+<div class="card case scroll" tabindex="0" role="region" aria-label="Caso difícil 5">
 <h3>5. Não match na fila de revisão</h3>
 <div class="meta">A00083 × B00774 · pontuação 0,891</div>
 <table>
@@ -604,7 +622,7 @@ no gabarito e as similaridades calculadas.</p>
 
 
 <h2>7. Modo pseudonimizado</h2>
-<div class="card scroll">
+<div class="card scroll" tabindex="0" role="region" aria-label="Tabela: modo pseudonimizado">
 <p>As duas bases trocam apenas hashes SHA-256 com sal secreto de chaves padronizadas. O
 pareamento passa a ser exato: qualquer diferença na chave impede o par.</p>
 <table>

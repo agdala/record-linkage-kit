@@ -6,6 +6,8 @@ from pathlib import Path
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+PAGES_URL = "https://agdala.github.io/record-linkage-kit/"
+
 
 def pct(value: float, digits: int = 1) -> str:
     return f"{value * 100:.{digits}f}%".replace(".", ",")
@@ -56,8 +58,18 @@ def pr_chart(rows: list[dict], thr: dict, width: int = 720, height: int = 320) -
     while v <= 1.0001:
         ticks_y.append({"v": v, "y": sy(v)})
         v = round(v + step, 4)
+    desc = (
+        f"Linhas de precisão, recall e F1 para {len(rows)} limiares de pontuação, "
+        f"de {dec(x0)} a {dec(x1)}, com marcas nos limiares de revisão "
+        f"({dec(thr['revisao'])}) e de match ({dec(thr['match'])})."
+    )
+    no_match = next((r for r in rows if r["limiar"] == thr["match"]), None)
+    if no_match:
+        desc += (f" No limiar de match: precisão {pct(no_match['precisao'])}, "
+                 f"recall {pct(no_match['recall'])} e F1 {pct(no_match['f1'])}.")
+    desc += " Os valores de cada limiar estão na tabela abaixo do gráfico."
     return {
-        "w": width, "h": height, "m": m, "series": series,
+        "w": width, "h": height, "m": m, "series": series, "desc": desc,
         "ticks_x": [{"v": x, "x": sx(x)} for x in xs],
         "ticks_y": ticks_y,
         "marks": [{"label": "revisão", "x": sx(thr["revisao"])},
@@ -73,6 +85,7 @@ def render_report(metrics: dict, cases: list[dict], path: str | Path) -> None:
                       autoescape=select_autoescape(["html", "j2"]))
     env.filters.update(pct=pct, num=num, dec=dec)
     html = env.get_template("relatorio.html.j2").render(
-        m=metrics, cases=cases, chart=pr_chart(metrics["por_limiar"], metrics["limiares"])
+        m=metrics, cases=cases, chart=pr_chart(metrics["por_limiar"], metrics["limiares"]),
+        pages_url=PAGES_URL,
     )
     Path(path).write_text(html, encoding="utf-8")
