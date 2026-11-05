@@ -36,6 +36,7 @@ jobs:
           mkdir -p site
           cp reports/relatorio.html site/index.html
           cp reports/metricas.json site/metricas.json
+          cp docs/social-preview.png site/social-preview.png
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

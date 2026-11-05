@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -59,7 +60,10 @@ def test_report_is_self_contained(evaluated):
     out, _ = evaluated
     html = (out / "relatorio.html").read_text()
     assert "Resumo executivo" in html and "Casos difíceis" in html and "<svg" in html
-    assert "http://" not in html and "https://" not in html  # no external resources
+    # no external resources; the only absolute URLs allowed are the Open Graph / Twitter share tags,
+    # which crawlers read and the browser never loads
+    body = re.sub(r'<meta (property="og:|name="twitter:)[^>]*>', "", html)
+    assert "http://" not in body and "https://" not in body
 
 
 def test_evaluate_is_deterministic(evaluated, tmp_path, sample_dir):
