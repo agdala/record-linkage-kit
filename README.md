@@ -3,12 +3,13 @@
 [![ci](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml)
 [![relatório](https://github.com/agdala/record-linkage-kit/actions/workflows/pages.yml/badge.svg)](https://agdala.github.io/record-linkage-kit/)
 
-Deduplicação e cruzamento de bases cadastrais de pessoas (**record linkage**) em Python, com
-governança de dados, usando os princípios da LGPD como referência de boas práticas. Um cadastro operacional de **5.000 registros** é cruzado com uma lista
-governamental de **3.000 registros**, cheia de erros realistas, e o resultado é medido contra um
-gabarito.
+Deduplicação e cruzamento de cadastros de pessoas (record linkage) em Python, com revisão humana, pseudonimização e avaliação contra um gabarito.
 
 **Relatório de avaliação (GitHub Pages):** <https://agdala.github.io/record-linkage-kit/>
+
+Um cadastro operacional de **5.000 registros** é cruzado com uma lista governamental de **3.000
+registros**, cheia de erros realistas, com governança de dados e os princípios da LGPD como
+referência de boas práticas. O resultado é medido contra um gabarito.
 
 > [!IMPORTANT]
 > **Todos os dados são 100% sintéticos**, gerados com Faker e semente fixa. Nenhum nome, documento
@@ -144,7 +145,7 @@ estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
 make test
 ```
 
-São 77 testes (pytest) sobre a amostra sintética de `data/sample/` (200 + 120 registros): uma
+São 78 testes (pytest) sobre a amostra sintética de `data/sample/` (200 + 120 registros): uma
 regra de padronização ou fonética por teste, blocagem, comparação, pontuação, resolução 1:1,
 avaliação, pseudonimização e o fluxo de ponta a ponta. O CI roda `ruff`, `pytest` e `make run` em
 Python 3.10 e 3.12 a cada push.
@@ -427,6 +428,19 @@ mode (salted SHA-256 via HMAC, salt kept in an environment variable) links witho
 names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
 The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
 checks that the published metrics are reproduced.
+
+## Projetos relacionados
+
+Os quatro repositórios formam um ciclo de dados, da coleta ao monitoramento:
+
+| Etapa | Projeto | O que faz | Publicado |
+|---|---|---|---|
+| 1. Coletar | [xlsform-validator](https://github.com/agdala/xlsform-validator) | Qualidade, consentimento e LGPD em formulários KoboToolbox/ODK | [versão web](https://agdala.github.io/xlsform-validator/) |
+| 2. Transformar e publicar | [sismigra-analytics](https://github.com/agdala/sismigra-analytics) | Pipeline bronze/prata/ouro com Python, DuckDB e dbt, com controle de divulgação | [dbt docs](https://agdala.github.io/sismigra-analytics/) |
+| 3. Integrar | **record-linkage-kit** (este repositório) | Deduplicação e cruzamento de cadastros, com revisão humana e pseudonimização | [relatório](https://agdala.github.io/record-linkage-kit/) |
+| 4. Monitorar | [monitoring-5w-kit](https://github.com/agdala/monitoring-5w-kit) | Relatos de parceiros, metas e dupla contagem | [relatório](https://agdala.github.io/monitoring-5w-kit/) |
+
+Autoria: Agda Santos, com auxílio de ferramentas de IA.
 
 ## Licença
 
