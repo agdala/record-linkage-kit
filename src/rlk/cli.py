@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import sys
 
+from rlk.config import load_config
 from rlk.generate import GeneratorConfig, generate
+from rlk.link import run_link
 
 
 def _cmd_generate(args: argparse.Namespace) -> int:
@@ -14,6 +16,20 @@ def _cmd_generate(args: argparse.Namespace) -> int:
     print(f"Bases sintéticas geradas em {args.out}/ (semente {args.seed})")
     for key, value in summary.items():
         print(f"  {key}: {value}")
+    return 0
+
+
+def _cmd_link(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    s = run_link(cfg)
+    b = s["blocagem"]
+    print(f"Pares possíveis: {b['pares_possiveis']:,} | candidatos após blocagem: "
+          f"{b['pares_candidatos']:,} (redução de {b['taxa_reducao']:.2%})")
+    print(f"Matches automáticos: {s['matches']} | revisão manual: {s['revisao_manual']} | "
+          f"B sem par: {s['nao_pareados_b']}")
+    if "deduplicacao" in s:
+        print(f"Duplicatas na base A: {s['deduplicacao']['pares_duplicados']} pares")
+    print(f"Saídas em {cfg['saida']}/")
     return 0
 
 
@@ -29,6 +45,10 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--n-b", type=int, default=3000, help="registros da base B")
     g.add_argument("--seed", type=int, default=42, help="semente aleatória")
     g.set_defaults(func=_cmd_generate)
+
+    lk = sub.add_parser("link", help="padroniza, bloca, compara, pontua e classifica os pares")
+    lk.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
+    lk.set_defaults(func=_cmd_link)
     return parser
 
 

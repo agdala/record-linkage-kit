@@ -1,0 +1,47 @@
+# Configuração do cruzamento (record linkage). Todos os caminhos são relativos à raiz do projeto.
+
+entrada:
+  base_a: data/base_a.csv        # cadastro operacional
+  base_b: data/base_b.csv        # lista governamental
+  gabarito: data/gabarito.csv    # usado só pelo `rlk evaluate`
+
+saida: reports
+
+padronizacao:
+  remover_particulas: true       # DE, DA, DO, DAS, DOS, E
+
+# Blocagem: cada regra gera pares candidatos com valores iguais em todas as chaves.
+# O conjunto final é a UNIÃO das regras. Registros com chave vazia não entram naquela regra.
+blocagem:
+  - nome: uf_ano
+    chaves: [uf, ano_nascimento]
+  - nome: fonetica_nome_sexo
+    chaves: [fon_primeiro_nome, sexo]
+  - nome: fonetica_sobrenome_ano
+    chaves: [fon_ultimo_sobrenome, ano_nascimento]
+
+# Pesos da pontuação. A pontuação é a média ponderada das similaridades (0 a 1) dos campos
+# disponíveis nos dois registros: um campo ausente sai do numerador e do denominador.
+pesos:
+  nome: 0.35
+  nome_mae: 0.15
+  data_nascimento: 0.25
+  sexo: 0.05
+  municipio: 0.05
+  documento: 0.15
+
+# Similaridade atribuída a cada nível de comparação da data de nascimento.
+niveis_data:
+  igual: 1.0
+  dia_mes_trocado: 0.8
+  so_ano: 0.3
+  diferente: 0.0
+
+limiares:
+  match: 0.85      # >= match: pareamento automático
+  revisao: 0.70    # entre revisao e match: fila de revisão manual; abaixo: não match
+
+# Deduplicação da base A (mesma lógica, comparando a base com ela mesma).
+deduplicacao:
+  ativa: true
+  limiar: 0.90

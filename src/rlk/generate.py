@@ -43,10 +43,12 @@ MUNICIPALITIES: list[tuple[str, str, int]] = [
 B_ERRORS = {
     "sem_acento": 0.60,           # government list without accents
     "sem_particulas": 0.30,       # "de", "da", "dos" removed
-    "digitacao": 0.20,            # one typing error in the name
+    "digitacao": 0.25,            # one or two typing errors in the name
+    "digitacao_mae": 0.10,        # typing error in the mother's name
     "sobrenomes_invertidos": 0.10,
     "nome_abreviado": 0.10,       # middle names reduced to initials
     "dia_mes_trocado": 0.08,
+    "data_aproximada": 0.05,      # unknown day and month recorded as 01/01 (common in the field)
     "mudou_municipio": 0.10,      # internal relocation (e.g. interiorização)
     "nome_mae_ausente": 0.15,
 }
@@ -79,7 +81,7 @@ class GeneratorConfig:
     n_b: int = 3000
     overlap: float = 0.60       # share of B people who are also in A
     dup_rate_a: float = 0.03    # share of A records that are internal duplicates
-    sibling_rate_b: float = 0.05  # share of B-only people who are siblings of someone in A
+    sibling_rate_b: float = 0.10  # share of B-only people who are siblings of someone in A
     spanish_share: float = 0.35  # share of people with Spanish-speaking names
     seed: int = 42
 
@@ -134,10 +136,13 @@ class SyntheticGenerator:
             birth = date(1940, 1, 1) + timedelta(days=self.rng.randrange(0, 365 * 84))
             municipality, uf = self._municipality()
         else:
-            # Sibling: same mother, surnames and place, different first name and birth date.
             surnames, mother = list(family.surnames), family.mother
-            gap = self.rng.choice((-1, 1)) * self.rng.randrange(300, 3000)
-            birth = family.birth + timedelta(days=gap)
+            # Siblings: same mother, surnames and place. Half of them are twins (same birth date).
+            if self.rng.random() < 0.5:
+                birth = family.birth
+            else:
+                gap = self.rng.choice((-1, 1)) * self.rng.randrange(300, 3000)
+                birth = family.birth + timedelta(days=gap)
             municipality, uf = family.municipality, family.uf
         first = self._first(fk, sex)
         self._pid += 1
@@ -194,11 +199,16 @@ class SyntheticGenerator:
         name = " ".join(first + surnames)
         if r() < B_ERRORS["digitacao"]:
             name = self._typo(name)
+            if r() < 0.3:
+                name = self._typo(name)
             errors.append("digitacao")
         mother = p.mother
         if r() < B_ERRORS["nome_mae_ausente"]:
             mother = ""
             errors.append("nome_mae_ausente")
+        elif r() < B_ERRORS["digitacao_mae"]:
+            mother = self._typo(mother)
+            errors.append("digitacao_mae")
         if r() < B_ERRORS["sem_acento"]:
             name, mother = self._strip_accents(name), self._strip_accents(mother)
             errors.append("sem_acento")
@@ -206,6 +216,9 @@ class SyntheticGenerator:
         if r() < B_ERRORS["dia_mes_trocado"] and birth.day <= 12 and birth.day != birth.month:
             birth = date(birth.year, birth.day, birth.month)
             errors.append("dia_mes_trocado")
+        if r() < B_ERRORS["data_aproximada"] and (birth.day, birth.month) != (1, 1):
+            birth = date(birth.year, 1, 1)
+            errors.append("data_aproximada")
         birth_str = birth.strftime("%d/%m/%Y")
         if r() < B_DATE_MISSING:
             birth_str = ""

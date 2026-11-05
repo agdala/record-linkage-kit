@@ -1,9 +1,9 @@
-.PHONY: install run generate link evaluate test lint sample clean
+.PHONY: install run generate link test lint sample clean
 
 install:      ## instala o projeto e as dependências de desenvolvimento
 	pip install -e ".[dev]"
 
-run: generate ## fluxo completo: gerar as bases sintéticas
+run: generate link ## fluxo completo: gerar, cruzar
 
 generate:     ## gera data/base_a.csv, data/base_b.csv e data/gabarito.csv
 	rlk generate
@@ -13,6 +13,9 @@ test:         ## testes unitários e de ponta a ponta (amostra sintética)
 
 lint:         ## verificação de estilo
 	python -m ruff check .
+
+link:         ## padroniza, bloca, compara, pontua e classifica (saídas em reports/)
+	rlk link --config config/default.yaml
 
 sample:       ## regenera a amostra pequena usada nos testes (data/sample/)
 	rlk generate --out data/sample --n-a 200 --n-b 120 --seed 7
