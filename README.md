@@ -213,7 +213,8 @@ qualquer cenário, o recall após a revisão é de 99,4%, porque o limiar de rev
   indevida evitada;
 - os 4 falsos positivos que restam são todos gêmeos sem documento, um padrão que a pontuação não
   separa. A resposta para eles é uma regra de negócio (mesma mãe + mesma data + primeiro nome
-  diferente vai sempre para revisão), não um limiar mais alto;
+  diferente vai sempre para revisão), não um limiar mais alto. Essa regra ainda não está
+  implementada e é o primeiro item dos próximos passos (seção 9);
 - 0,95 zera os falsos positivos, mas **dobra a fila** (328 pares, 164 a mais que em 0,90) para
   evitar os 4 erros restantes: 41 revisões a mais por fusão evitada, e o recall automático cai
   para 85,9%.
@@ -377,14 +378,21 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 
 ## 9. Próximos passos
 
-1. **Comparar com o Splink** nas mesmas bases e com o mesmo gabarito.
-2. **Fellegi-Sunter com EM:** estimar as probabilidades m e u e os pesos de cada nível de
+1. **Regra de gêmeos sem documento** (ainda não implementada): todo par com mesma mãe, mesma
+   data de nascimento, primeiro nome diferente e sem documento para comparar (ausente em pelo
+   menos um dos registros) vai para a fila de revisão, qualquer que seja a pontuação. O objetivo é
+   tirar do match automático os 4 falsos positivos restantes (seção 4.3) sem subir o limiar.
+   Cuidado: a regra também desvia para a fila pares verdadeiros cujo primeiro nome tem erro de
+   digitação ou abreviação. O custo na fila precisa ser medido e publicado em `metricas.json`
+   antes de adotá-la, e o critério pode exigir similaridade baixa do primeiro nome, não só diferença.
+2. **Comparar com o Splink** nas mesmas bases e com o mesmo gabarito.
+3. **Fellegi-Sunter com EM:** estimar as probabilidades m e u e os pesos de cada nível de
    comparação a partir dos dados, em vez de pesos fixos.
-3. Regra de blocagem por documento e por fonética do nome completo, para recuperar os pares
+4. Regra de blocagem por documento e por fonética do nome completo, para recuperar os pares
    perdidos sem data.
-4. Agrupamento (clusters) na deduplicação, para pessoas com três ou mais registros.
-5. Pareamento pseudonimizado aproximado com filtros de Bloom (privacy-preserving record linkage).
-6. Medir a concordância entre revisores na fila de revisão.
+5. Agrupamento (clusters) na deduplicação, para pessoas com três ou mais registros.
+6. Pareamento pseudonimizado aproximado com filtros de Bloom (privacy-preserving record linkage).
+7. Medir a concordância entre revisores na fila de revisão.
 
 ## 10. Estrutura do repositório
 
