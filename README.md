@@ -1,7 +1,109 @@
 # record-linkage-kit
 
-Deduplicação e cruzamento de bases cadastrais de pessoas (record linkage), com governança de
-dados e LGPD, sobre dados **100% sintéticos**. Projeto em construção.
+[![ci](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml)
+[![relatório](https://github.com/agdala/record-linkage-kit/actions/workflows/pages.yml/badge.svg)](https://agdala.github.io/record-linkage-kit/)
+
+Deduplicação e cruzamento de bases cadastrais de pessoas (**record linkage**) em Python, com
+governança de dados e LGPD. Um cadastro operacional de **5.000 registros** é cruzado com uma lista
+governamental de **3.000 registros**, cheia de erros realistas, e o resultado é medido contra um
+gabarito.
+
+**Relatório de avaliação (GitHub Pages):** <https://agdala.github.io/record-linkage-kit/>
+
+> [!IMPORTANT]
+> **Todos os dados são 100% sintéticos**, gerados com Faker e semente fixa. Nenhum nome, documento
+> ou data pertence a uma pessoa real, e nenhum segredo é versionado. Os números deste README são os
+> obtidos com `make run` e estão em [`reports/metricas.json`](reports/metricas.json); o CI confere
+> que eles se reproduzem a cada push.
+
+---
+
+## 1. Problema
+
+Organizações humanitárias e órgãos públicos cadastram as mesmas pessoas em sistemas diferentes.
+Cruzar essas bases é necessário para evitar assistência duplicada, encontrar quem ainda não acessou
+um direito e unificar o histórico de cada pessoa. Mas não há um identificador comum confiável:
+
+- o documento falta em boa parte dos registros (40% na lista governamental sintética);
+- nomes aparecem sem acentos, sem "de", "da" e "dos", com sobrenomes em outra ordem, abreviados ou
+  com erros de digitação;
+- datas chegam com dia e mês trocados, registradas como 01/01 quando só o ano é conhecido, ou ausentes;
+- a pessoa muda de município (por exemplo, na interiorização);
+- há gêmeos, irmãos e homônimos que parecem a mesma pessoa.
+
+O projeto mostra o processo completo, de ponta a ponta, com uma implementação própria e simples
+(sem Splink, dedupe ou recordlinkage), e o mede contra um gabarito conhecido.
+
+## 2. Fluxo
+
+```mermaid
+flowchart LR
+    G[Gerar<br/>bases sintéticas<br/>+ gabarito] --> P[Padronizar<br/>texto, datas, sexo,<br/>documento, fonética]
+    P --> B[Blocar<br/>união de regras<br/>do YAML]
+    B --> C[Comparar<br/>Jaro-Winkler, níveis<br/>de data, igualdade]
+    C --> S[Pontuar<br/>média ponderada<br/>de 0 a 1]
+    S --> K{Classificar<br/>+ resolução 1:1}
+    K -->|≥ 0,85| M[matches.csv]
+    K -->|0,70 a 0,85| R[Revisar<br/>revisao_manual.csv]
+    K -->|< 0,70| N[nao_pareados.csv]
+    R -->|decisão humana| M
+    M --> E[Avaliar<br/>contra o gabarito<br/>relatorio.html]
+```
+
+O mesmo fluxo roda sobre a base A contra ela mesma para a **deduplicação**
+(`reports/duplicatas_a.csv`). Em paralelo, o **modo pseudonimizado** (`rlk pseudo`) faz o
+cruzamento só com hashes, sem nomes em claro (seção 6).
+
+## 3. Como rodar
+
+### 3.1 No Windows, com o Visual Studio Code
+
+1. Instale o **Python 3.10 ou superior** (Microsoft Store, "Python 3.12") e a extensão **Python**
+   no VS Code (`Ctrl+Shift+X`, busque "Python").
+2. Clone o repositório: `Ctrl+Shift+P`, digite **Git: Clone** e cole
+   `https://github.com/agdala/record-linkage-kit`.
+3. Abra o terminal (**Terminal > Novo Terminal**) e rode, um comando por vez:
+
+```bash
+python -m venv .venv
+```
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+```bash
+pip install -e ".[dev]"
+```
+
+```bash
+rlk generate
+```
+
+```bash
+rlk link --config config/default.yaml
+```
+
+```bash
+$env:RLK_SALT = python -c "import secrets; print(secrets.token_hex(32))"; rlk pseudo
+```
+
+```bash
+rlk evaluate
+```
+
+Abra `reports\relatorio.html` no navegador.
+
+> Se a ativação der erro de "execução de scripts desabilitada", rode uma vez
+> `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` e repita.
+> O Windows não traz o `make`; os comandos acima são exatamente o que o `make run` executa.
+> O `rlk pseudo` é opcional: sem ele, o relatório só não mostra a seção do modo pseudonimizado.
+
+### 3.2 No Linux ou macOS
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+```
 
 ```bash
 pip install -e ".[dev]"
@@ -11,4 +113,262 @@ pip install -e ".[dev]"
 make run
 ```
 
-Licença MIT.
+`make run` executa `rlk generate`, `rlk link`, `rlk pseudo` (com um sal efêmero, se `RLK_SALT` não
+estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
+
+### 3.3 Comandos
+
+| Comando | O que faz |
+|---|---|
+| `rlk generate` | Gera `data/base_a.csv`, `data/base_b.csv` e `data/gabarito.csv` (semente 42) |
+| `rlk link --config config/default.yaml` | Padroniza, bloca, compara, pontua, classifica, resolve 1:1 e deduplica a base A |
+| `rlk pseudo` | Cruza as bases só por hashes SHA-256 com sal secreto (`RLK_SALT`) |
+| `rlk evaluate` | Compara com o gabarito e gera `reports/metricas.json` e `reports/relatorio.html` |
+
+### 3.4 Saídas
+
+| Caminho | Conteúdo | No Git |
+|---|---|---|
+| `reports/matches.csv` | Pares aceitos automaticamente, com a similaridade de cada campo | Não |
+| `reports/revisao_manual.csv` | Pares da faixa de revisão, campos das duas bases lado a lado, pontuação e coluna `decisao_revisor` | Não |
+| `reports/nao_pareados.csv` | Registros de A e de B sem par, com a melhor pontuação obtida | Não |
+| `reports/duplicatas_a.csv` | Duplicatas internas da base A | Não |
+| `reports/candidatos.csv` | Todos os pares comparados, com pontuação (insumo do `evaluate`) | Não |
+| `reports/resumo_link.json` | Contagens e registro do cruzamento (hash das bases e da configuração) | Não |
+| `reports/metricas.json` | Todas as métricas da avaliação | **Sim** |
+| `reports/relatorio.html` | Relatório autocontido, também publicado no Pages | **Sim** |
+
+### 3.5 Testes
+
+```bash
+make test
+```
+
+São 77 testes (pytest) sobre a amostra sintética de `data/sample/` (200 + 120 registros): uma
+regra de padronização ou fonética por teste, blocagem, comparação, pontuação, resolução 1:1,
+avaliação, pseudonimização e o fluxo de ponta a ponta. O CI roda `ruff`, `pytest` e `make run` em
+Python 3.10 e 3.12 a cada push.
+
+## 4. Resultados
+
+Bases: A com 5.000 registros (150 duplicatas internas), B com 3.000 registros, dos quais **1.800**
+têm par em A. Limiares: match automático a partir de **0,85**, revisão manual de **0,70 a 0,85**.
+
+### 4.1 Cruzamento A × B
+
+| Indicador | Resultado |
+|---|---|
+| Pares possíveis sem blocagem | 15.000.000 |
+| Pares candidatos após a blocagem | 138.897 (**redução de 99,07%**) |
+| Completude da blocagem (pares verdadeiros entre os candidatos) | **99,4%** |
+| Matches automáticos (≥ 0,85) | 1.726, com 12 falsos positivos |
+| **Precisão automática** | **99,3%** |
+| **Recall automático** | **95,2%** |
+| F1 automático | 97,2% |
+| Fila de revisão manual (0,70 a 0,85) | **148 pares** (4,9% da base B), 76 deles verdadeiros (51%) |
+| **Recall após a revisão** (revisão correta) | **99,4%** |
+| Precisão após a revisão (revisão correta) | 99,3% |
+
+### 4.2 Troca entre precisão e recall
+
+| Limiar | Pares aceitos | Falsos positivos | Precisão | Recall | F1 |
+|---|---|---|---|---|---|
+| 0,60 | 1.962 | 172 | 91,2% | 99,4% | 95,2% |
+| 0,70 | 1.874 | 84 | 95,5% | 99,4% | 97,4% |
+| 0,75 | 1.837 | 50 | 97,3% | 99,3% | 98,3% |
+| 0,80 | 1.775 | 31 | 98,3% | 96,9% | 97,6% |
+| **0,85** | **1.726** | **12** | **99,3%** | **95,2%** | **97,2%** |
+| 0,90 | 1.710 | 4 | 99,8% | 94,8% | 97,2% |
+| 0,95 | 1.546 | 0 | 100,0% | 85,9% | 92,4% |
+
+O melhor F1 isolado está em 0,75, mas com 50 falsos positivos. Em cadastros de pessoas, um falso
+positivo funde duas pessoas, por isso o limiar automático fica em 0,85 e a faixa intermediária
+vai para revisão humana.
+
+### 4.3 Blocagem por regra
+
+| Regra (chaves) | Pares | Completude sozinha |
+|---|---|---|
+| `uf_ano` (UF + ano de nascimento) | 19.598 | 84,6% |
+| `fonetica_nome_sexo` (fonética do primeiro nome + sexo) | 120.064 | 92,8% |
+| `fonetica_sobrenome_ano` (fonética do último sobrenome + ano) | 2.489 | 80,2% |
+| **União** | **138.897** | **99,4%** |
+
+Nenhuma regra isolada passa de 93%; a união chega a 99,4%.
+
+### 4.4 Deduplicação, pseudonimização e casos difíceis
+
+| Indicador | Resultado |
+|---|---|
+| Deduplicação da base A (limiar 0,90) | 150 de 150 duplicatas, precisão e recall de 100% |
+| Modo pseudonimizado (hashes, cascata de 4 chaves) | 1.504 pares, **precisão 100%, recall 83,6%** |
+
+O modo pseudonimizado perde 11,7 pontos de recall em relação ao automático aproximado (95,2%) e
+15,9 pontos em relação ao resultado com revisão (99,4%). Esse é o custo de não trocar nomes em claro.
+
+O [relatório](https://agdala.github.io/record-linkage-kit/) traz ainda o recall por tipo de erro e
+**cinco casos difíceis comentados**. Os mais instrutivos:
+
+- os falsos positivos com pontuação alta são **gêmeos**: mesma mãe, mesma data, mesmo município,
+  só o primeiro nome muda. Nenhum limiar os separa sem documento;
+- datas registradas como **01/01** (só o ano conhecido) têm recall automático de apenas 5%, mas
+  100% depois da revisão: a pontuação cai para a faixa de revisão, como deveria;
+- registros **sem data de nascimento** ficam com 91,9% de recall mesmo com revisão: duas das três
+  regras de blocagem dependem do ano.
+
+## 5. Como funciona
+
+### 5.1 Padronização ([`standardize.py`](src/rlk/standardize.py))
+
+Maiúsculas, remoção de acentos, pontuação e espaços duplos, remoção opcional das partículas
+(DE, DA, DO, DAS, DOS, E e as espanholas DEL, LA, LOS, Y), datas ISO e DD/MM/AAAA, sexo em F/M
+(FEMININO, MASCULINO...) e documento só com dígitos.
+
+**Chave fonética para português**, aplicada a cada palavra, nesta ordem:
+
+| # | Regra | Exemplo (efeito só desta regra) |
+|---|---|---|
+| 1 | Ç vira S | CONCEIÇÃO → CONSEISAO |
+| 2 | H inicial é mudo | HELENA → ELENA |
+| 3 | PH vira F | RAPHAEL → RAFAEL |
+| 4 | TH vira T | THAIS → TAIS |
+| 5 | LH vira LI | GUILHERME → GUILIERME |
+| 6 | NH vira NI | MARINHO → MARINIO |
+| 7 | CH e SH viram X | CHAVES → XAVES |
+| 8 | H restante é mudo | JOHANA → JOANA |
+| 9 | SC antes de E/I vira S | NASCIMENTO → NASIMENTO |
+| 10 | C antes de E/I vira S | CECILIA → SESILIA |
+| 11 | QU antes de E/I vira K | HENRIQUE → ENRIKE |
+| 12 | Q vira K | QUADROS → KUADROS |
+| 13 | C restante vira K | CARLOS → KARLOS |
+| 14 | G antes de E/I vira J | GISELE → JISELE |
+| 15 | Y vira I | YASMIN → IASMIN |
+| 16 | W vira V | WAGNER → VAGNER |
+| 17 | Z vira S | SOUZA → SOUSA, LUIZ → LUIS |
+| 18 | X entre vogais vira S | ALEXANDRE → ALESANDRE |
+| 19 | SS vira S | VANESSA → VANESA |
+| 20 | M antes de consoante ou no fim vira N | MIRIAM → MIRIAN |
+| 21 | Letras repetidas viram uma | MATTOS → MATOS |
+
+Cada regra tem um teste em [`tests/test_standardize.py`](tests/test_standardize.py).
+
+### 5.2 Blocagem, comparação e pontuação
+
+Tudo é configurado em [`config/default.yaml`](config/default.yaml):
+
+- **Blocagem:** cada regra lista as chaves que precisam coincidir; o conjunto de candidatos é a
+  união das regras. Uma chave vazia não gera par (vazio não é evidência).
+- **Comparação:** Jaro-Winkler para nome e nome da mãe (também com as palavras em ordem
+  alfabética, para sobrenomes invertidos); níveis para a data (igual 1,0, dia e mês trocados 0,8,
+  só o ano 0,3, diferente 0); igualdade para sexo, município + UF e documento.
+- **Pontuação:** média ponderada das similaridades, de 0 a 1. Pesos: nome 0,35, data 0,25, nome da
+  mãe 0,15, documento 0,15, sexo 0,05, município 0,05. **Campo ausente sai do numerador e do
+  denominador**, então a falta de documento não penaliza o par.
+- **Classificação e 1:1:** pares acima do limiar de revisão são ordenados pela pontuação e aceitos
+  um a um, sem repetir registro (resolução gulosa). Depois, cada par é classificado em match,
+  revisão ou não match.
+
+### 5.3 Avaliação
+
+O recall é medido **por registro de B**: um registro com par conta como encontrado se for ligado
+a qualquer registro de A da mesma pessoa (a pessoa pode estar duplicada em A). A completude da
+blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto do recall.
+
+## 6. Proteção de dados
+
+A nota completa está em [`docs/protecao_de_dados.md`](docs/protecao_de_dados.md): finalidade e base
+legal (LGPD), minimização, papéis de controlador e operador, registro do cruzamento, retenção, quem
+acessa a fila de revisão e por que existe revisão humana.
+
+**Modo pseudonimizado** ([`pseudonymize.py`](src/rlk/pseudonymize.py)): duas organizações combinam
+um sal secreto fora do Git (variável `RLK_SALT`), cada uma calcula o SHA-256 com sal (HMAC) de
+chaves padronizadas da própria base e só os hashes são trocados. Limites, detalhados na nota:
+
+| Limite | Consequência |
+|---|---|
+| Ataque de dicionário | Quem tem o sal (inclusive a outra parte) pode testar listas de nomes e datas. O hash é **pseudonimização, não anonimização**: a LGPD continua valendo. |
+| Acordo de compartilhamento | Esconder os nomes não dispensa base legal, acordo, proibição de reidentificação e destruição do sal. |
+| Perda do pareamento aproximado | Um erro de digitação muda o hash. Recall de 83,6%, contra 95,2% (aproximado) e 99,4% (com revisão). |
+
+## 7. Decisões técnicas
+
+| Decisão | Motivo |
+|---|---|
+| **Implementação própria, sem Splink, dedupe ou recordlinkage** | Cada etapa fica visível e testável em poucas linhas, o que serve ao objetivo de demonstrar e auditar o processo. A comparação com o Splink é um próximo passo. |
+| **Dados sintéticos com erros documentados no gabarito** | Permite medir precisão e recall de verdade e explicar cada erro do modelo pelo erro introduzido (recall por tipo de erro). Nenhum dado real é necessário, nem no CI. |
+| **Faker com versão fixa (`faker==40.44.0`)** | A mesma semente só gera os mesmos dados com a mesma versão. O CI confere que `metricas.json` se reproduz em Python 3.10 (pandas 2) e 3.12. |
+| **Gêmeos, irmãos e datas 01/01 no gerador** | Sem eles, a primeira versão chegava a 99,9% de precisão e 99,6% de recall: fácil demais para mostrar por que a revisão humana existe. |
+| **União de três regras de blocagem** | Nenhuma regra isolada passa de 93% de completude; a união chega a 99,4% e ainda corta 99,07% dos pares. |
+| **Média ponderada que ignora campos ausentes** | A falta de documento (40% em B) ou do nome da mãe não deve derrubar a pontuação de um par que coincide em todo o resto. |
+| **Jaro-Winkler também com tokens ordenados** | Recupera sobrenomes invertidos sem uma comparação palavra a palavra mais cara. |
+| **Dois limiares e revisão humana** | Os falsos positivos de pontuação alta (gêmeos) não se resolvem com limiar. A revisão cobre a faixa em que o modelo é incerto, e o art. 20 da LGPD garante a revisão de decisões automatizadas. |
+| **Resolução 1:1 gulosa** | Simples, determinística e suficiente quando cada pessoa aparece uma vez em B. Um único passe serve a todos os limiares da avaliação. |
+| **HMAC-SHA256 em vez de SHA-256(sal + valor)** | É a construção padrão para hash com segredo e evita o ataque de extensão de comprimento do SHA-256 puro; continua sendo "SHA-256 com sal secreto". |
+| **Relatório HTML único, sem bibliotecas externas** | Gráfico em SVG gerado em Python, abre offline e é publicado no Pages como um arquivo só. |
+| **`metricas.json` e `relatorio.html` versionados; CSVs com registros fora do Git** | Os números do README ficam rastreáveis sem versionar tabelas com nomes, mesmo sintéticos. |
+
+## 8. Limitações
+
+- **Dados sintéticos são mais regulares que os reais.** As taxas de erro foram escolhidas, não
+  medidas em bases reais; os números servem para comparar métodos, não para prometer resultados.
+- **Pesos e limiares definidos à mão.** Não foram estimados dos dados (como no modelo
+  Fellegi-Sunter); numa base real, precisam ser calibrados numa amostra rotulada.
+- **Deduplicação fácil demais.** As duplicatas internas de A têm só 1 ou 2 erros leves, por isso
+  100% de precisão e recall. Duplicatas reais tendem a ser mais difíceis.
+- **Resolução 1:1 gulosa** não é ótima globalmente e não forma grupos (clusters) com mais de dois
+  registros na deduplicação.
+- **Registros sem data de nascimento** dependem de uma única regra de blocagem (91,9% de recall
+  mesmo com revisão).
+- **Chave fonética simplificada:** pensada para nomes em português, trata nomes em espanhol só
+  parcialmente (por exemplo, não iguala LL e Y).
+- **A avaliação da revisão supõe um revisor perfeito.** Na prática, a fila também tem erros.
+- **Escala:** a comparação é feita em Python puro e roda em segundos para milhares de registros;
+  para milhões, seria preciso vetorizar ou usar um motor como DuckDB ou Spark.
+
+## 9. Próximos passos
+
+1. **Comparar com o Splink** nas mesmas bases e com o mesmo gabarito.
+2. **Fellegi-Sunter com EM:** estimar as probabilidades m e u e os pesos de cada nível de
+   comparação a partir dos dados, em vez de pesos fixos.
+3. Regra de blocagem por documento e por fonética do nome completo, para recuperar os pares
+   perdidos sem data.
+4. Agrupamento (clusters) na deduplicação, para pessoas com três ou mais registros.
+5. Pareamento pseudonimizado aproximado com filtros de Bloom (privacy-preserving record linkage).
+6. Medir a concordância entre revisores na fila de revisão.
+
+## 10. Estrutura do repositório
+
+```
+record-linkage-kit/
+├── src/rlk/            # generate, standardize, blocking, compare, link, evaluate, report, pseudonymize, cli
+├── config/             # default.yaml: blocagem, pesos, níveis de data, limiares
+├── tests/              # pytest com a amostra sintética
+├── docs/               # protecao_de_dados.md
+├── data/               # bases geradas (fora do Git), exceto data/sample/
+├── reports/            # metricas.json e relatorio.html versionados; demais saídas fora do Git
+└── .github/workflows/  # ci.yml (ruff + pytest + make run) e pages.yml (relatório no Pages)
+```
+
+## English summary
+
+**record-linkage-kit** is a portfolio project on deduplication and linkage of person registries
+with data governance under Brazil's data protection law (LGPD), built on **100% synthetic data**.
+A synthetic operational registry (5,000 records, 3% internal duplicates) is linked to a synthetic
+government list (3,000 records, 60% overlap) that carries realistic errors: missing accents and
+particles, typos, reordered and abbreviated surnames, swapped day and month, 01/01 placeholder
+dates, missing documents (40%) and dates (5%), relocated people, twins and siblings.
+
+The pipeline is a small, hand-written Python implementation (pandas, rapidfuzz): standardization
+with a 21-rule Portuguese phonetic key, configurable blocking (union of rules, 99.07% pair
+reduction, 99.4% pair completeness), Jaro-Winkler and level-based comparisons, a weighted score
+from 0 to 1 that ignores missing fields, two thresholds (auto-match and manual review) and greedy
+1:1 resolution. Against the ground truth, auto-matches reach **99.3% precision and 95.2% recall**
+at 0.85; a review queue of 148 pairs (4.9% of list B) lifts recall to **99.4%**. A pseudonymized
+mode (salted SHA-256 via HMAC, salt kept in an environment variable) links without exchanging
+names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
+The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
+checks that the published metrics are reproduced.
+
+## Licença
+
+MIT. Veja [LICENSE](LICENSE).

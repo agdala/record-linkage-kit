@@ -17,7 +17,7 @@ def num(value: float | int, digits: int = 0) -> str:
 
 
 def dec(value: float | None, digits: int = 2) -> str:
-    return "—" if value is None else f"{value:.{digits}f}".replace(".", ",")
+    return "n/d" if value is None else f"{value:.{digits}f}".replace(".", ",")
 
 
 def pr_chart(rows: list[dict], thr: dict, width: int = 720, height: int = 320) -> dict:
