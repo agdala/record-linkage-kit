@@ -1,0 +1,28 @@
+# Dados gerados ficam fora do Git, exceto a amostra usada nos testes
+data/*
+!data/sample/
+
+# Saídas geradas: só o relatório e as métricas são versionados (sem CSVs com registros)
+reports/*
+!reports/.gitkeep
+!reports/relatorio.html
+!reports/metricas.json
+
+# Segredos: o sal da pseudonimização nunca é versionado
+.env
+*.salt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Sistema
+.DS_Store
+Thumbs.db

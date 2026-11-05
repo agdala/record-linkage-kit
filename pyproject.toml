@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "record-linkage-kit"
+version = "0.1.0"
+description = "Deduplicação e cruzamento de bases cadastrais (record linkage) com governança de dados e LGPD, sobre dados 100% sintéticos"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    # Versão fixa: a mesma semente só gera os mesmos dados com a mesma versão do Faker.
+    "faker==40.44.0",
+    "rapidfuzz>=3.0",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+rlk = "rlk.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rlk = ["templates/*.j2"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

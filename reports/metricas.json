@@ -1,0 +1,316 @@
+{
+  "bases": {
+    "base_a": 5000,
+    "base_b": 3000,
+    "pares_verdadeiros_link": 1855,
+    "registros_b_com_par": 1800,
+    "pares_verdadeiros_dedup": 150
+  },
+  "limiares": {
+    "match": 0.9,
+    "revisao": 0.7
+  },
+  "blocagem": {
+    "pares_possiveis": 15000000,
+    "pares_candidatos": 138897,
+    "taxa_reducao": 0.9907,
+    "completude_pares": 0.9941,
+    "por_regra": {
+      "uf_ano": {
+        "pares": 19598,
+        "completude": 0.8464
+      },
+      "fonetica_nome_sexo": {
+        "pares": 120064,
+        "completude": 0.9283
+      },
+      "fonetica_sobrenome_ano": {
+        "pares": 2489,
+        "completude": 0.8022
+      }
+    }
+  },
+  "por_limiar": [
+    {
+      "limiar": 0.5,
+      "pares": 2608,
+      "vp": 1790,
+      "fp": 818,
+      "fn": 10,
+      "precisao": 0.6863,
+      "recall": 0.9944,
+      "f1": 0.8122
+    },
+    {
+      "limiar": 0.55,
+      "pares": 2276,
+      "vp": 1790,
+      "fp": 486,
+      "fn": 10,
+      "precisao": 0.7865,
+      "recall": 0.9944,
+      "f1": 0.8783
+    },
+    {
+      "limiar": 0.6,
+      "pares": 1962,
+      "vp": 1790,
+      "fp": 172,
+      "fn": 10,
+      "precisao": 0.9123,
+      "recall": 0.9944,
+      "f1": 0.9516
+    },
+    {
+      "limiar": 0.65,
+      "pares": 1885,
+      "vp": 1790,
+      "fp": 95,
+      "fn": 10,
+      "precisao": 0.9496,
+      "recall": 0.9944,
+      "f1": 0.9715
+    },
+    {
+      "limiar": 0.7,
+      "pares": 1874,
+      "vp": 1790,
+      "fp": 84,
+      "fn": 10,
+      "precisao": 0.9552,
+      "recall": 0.9944,
+      "f1": 0.9744
+    },
+    {
+      "limiar": 0.75,
+      "pares": 1837,
+      "vp": 1787,
+      "fp": 50,
+      "fn": 13,
+      "precisao": 0.9728,
+      "recall": 0.9928,
+      "f1": 0.9827
+    },
+    {
+      "limiar": 0.8,
+      "pares": 1775,
+      "vp": 1744,
+      "fp": 31,
+      "fn": 56,
+      "precisao": 0.9825,
+      "recall": 0.9689,
+      "f1": 0.9757
+    },
+    {
+      "limiar": 0.85,
+      "pares": 1726,
+      "vp": 1714,
+      "fp": 12,
+      "fn": 86,
+      "precisao": 0.993,
+      "recall": 0.9522,
+      "f1": 0.9722
+    },
+    {
+      "limiar": 0.9,
+      "pares": 1710,
+      "vp": 1706,
+      "fp": 4,
+      "fn": 94,
+      "precisao": 0.9977,
+      "recall": 0.9478,
+      "f1": 0.9721
+    },
+    {
+      "limiar": 0.95,
+      "pares": 1546,
+      "vp": 1546,
+      "fp": 0,
+      "fn": 254,
+      "precisao": 1.0,
+      "recall": 0.8589,
+      "f1": 0.9241
+    }
+  ],
+  "automatico": {
+    "limiar": 0.9,
+    "pares": 1710,
+    "vp": 1706,
+    "fp": 4,
+    "fn": 94,
+    "precisao": 0.9977,
+    "recall": 0.9478,
+    "f1": 0.9721
+  },
+  "cenarios_limiar": [
+    {
+      "limiar_match": 0.85,
+      "pares_automaticos": 1726,
+      "fp": 12,
+      "fp_perfil_gemeos": 9,
+      "precisao": 0.993,
+      "recall_automatico": 0.9522,
+      "fila_revisao": 148,
+      "fila_verdadeiros": 76
+    },
+    {
+      "limiar_match": 0.9,
+      "pares_automaticos": 1710,
+      "fp": 4,
+      "fp_perfil_gemeos": 4,
+      "precisao": 0.9977,
+      "recall_automatico": 0.9478,
+      "fila_revisao": 164,
+      "fila_verdadeiros": 84
+    },
+    {
+      "limiar_match": 0.95,
+      "pares_automaticos": 1546,
+      "fp": 0,
+      "fp_perfil_gemeos": 0,
+      "precisao": 1.0,
+      "recall_automatico": 0.8589,
+      "fila_revisao": 328,
+      "fila_verdadeiros": 244
+    }
+  ],
+  "fila_revisao": {
+    "pares": 164,
+    "pares_verdadeiros": 84,
+    "proporcao_verdadeiros": 0.5122,
+    "recall_com_revisao": 0.9944,
+    "precisao_com_revisao_perfeita": 0.9978
+  },
+  "recall_por_erro": [
+    {
+      "erro": "data ausente",
+      "registros": 99,
+      "recall_automatico": 0.899,
+      "recall_com_revisao": 0.9192
+    },
+    {
+      "erro": "mudou de município",
+      "registros": 195,
+      "recall_automatico": 0.8923,
+      "recall_com_revisao": 0.9744
+    },
+    {
+      "erro": "erro de digitação no nome",
+      "registros": 464,
+      "recall_automatico": 0.9375,
+      "recall_com_revisao": 0.9784
+    },
+    {
+      "erro": "nome da mãe ausente",
+      "registros": 269,
+      "recall_automatico": 0.9331,
+      "recall_com_revisao": 0.9851
+    },
+    {
+      "erro": "sobrenomes em outra ordem",
+      "registros": 178,
+      "recall_automatico": 0.9326,
+      "recall_com_revisao": 0.9888
+    },
+    {
+      "erro": "documento ausente",
+      "registros": 736,
+      "recall_automatico": 0.947,
+      "recall_com_revisao": 0.9946
+    },
+    {
+      "erro": "acentos removidos",
+      "registros": 1099,
+      "recall_automatico": 0.9472,
+      "recall_com_revisao": 0.9964
+    },
+    {
+      "erro": "partículas removidas",
+      "registros": 207,
+      "recall_automatico": 0.942,
+      "recall_com_revisao": 1.0
+    },
+    {
+      "erro": "erro de digitação no nome da mãe",
+      "registros": 149,
+      "recall_automatico": 0.9396,
+      "recall_com_revisao": 1.0
+    },
+    {
+      "erro": "nome abreviado",
+      "registros": 75,
+      "recall_automatico": 0.9467,
+      "recall_com_revisao": 1.0
+    },
+    {
+      "erro": "dia e mês trocados",
+      "registros": 60,
+      "recall_automatico": 0.9167,
+      "recall_com_revisao": 1.0
+    },
+    {
+      "erro": "data aproximada (01/01)",
+      "registros": 80,
+      "recall_automatico": 0.05,
+      "recall_com_revisao": 1.0
+    }
+  ],
+  "deduplicacao": {
+    "limiar": 0.9,
+    "pares_encontrados": 150,
+    "vp": 150,
+    "precisao": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "completude_blocagem": 1.0,
+    "taxa_reducao": 0.9906
+  },
+  "pseudonimizado": {
+    "por_chave": [
+      {
+        "chave": "k1_documento",
+        "descricao": "documento",
+        "pares": 954,
+        "vp": 954,
+        "precisao": 1.0,
+        "recall": 0.53
+      },
+      {
+        "chave": "k2_nome_data",
+        "descricao": "nome + data de nascimento",
+        "pares": 1000,
+        "vp": 1000,
+        "precisao": 1.0,
+        "recall": 0.5556
+      },
+      {
+        "chave": "k3_fonetica_data_mae",
+        "descricao": "nome fonético + data + nome fonético da mãe",
+        "pares": 841,
+        "vp": 841,
+        "precisao": 1.0,
+        "recall": 0.4672
+      },
+      {
+        "chave": "k4_fonetica_ano_municipio",
+        "descricao": "nome fonético + ano + sexo + município",
+        "pares": 1047,
+        "vp": 1047,
+        "precisao": 1.0,
+        "recall": 0.5817
+      }
+    ],
+    "cascata": {
+      "pares": 1504,
+      "vp": 1504,
+      "precisao": 1.0,
+      "recall": 0.8356
+    },
+    "por_chave_na_cascata": {
+      "k1_documento": 954,
+      "k2_nome_data": 474,
+      "k3_fonetica_data_mae": 29,
+      "k4_fonetica_ano_municipio": 47
+    }
+  }
+}
