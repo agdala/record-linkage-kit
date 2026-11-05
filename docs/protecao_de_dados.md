@@ -1,15 +1,16 @@
 # Proteção de dados no cruzamento de bases cadastrais
 
-Esta nota descreve como um cruzamento de cadastros de pessoas, como o demonstrado neste projeto,
-deve ser conduzido à luz da **Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD)**. O projeto
-usa apenas dados sintéticos. A nota é um roteiro técnico e de governança, **não um parecer
-jurídico**: cada cruzamento real precisa da análise do encarregado (DPO) e da área jurídica das
-organizações envolvidas.
+Esta nota descreve boas práticas para um cruzamento de cadastros de pessoas como o demonstrado
+neste projeto. Ela adota os princípios da **Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD)**
+(finalidade, necessidade, segurança, minimização) como **referência de boas práticas**. O projeto usa
+apenas dados sintéticos. A nota é um roteiro técnico e de governança, **não um parecer jurídico**.
 
-> **Contexto de organizações internacionais.** Agências da ONU, como o ACNUR, seguem as próprias
-> políticas de proteção de dados, em razão de seus privilégios e imunidades. Órgãos públicos e
-> organizações da sociedade civil no Brasil seguem a LGPD. Num cruzamento entre esses atores, o
-> acordo de compartilhamento precisa conciliar os dois marcos e deixar explícito o mais restritivo.
+> **Marco legal aplicável.** Cada organização envolvida num cruzamento deve observar o marco legal e
+> as políticas internas de proteção de dados que se aplicam a ela. Organismos internacionais têm
+> privilégios e imunidades e políticas próprias de proteção de dados; esta nota não se pronuncia
+> sobre a aplicação da LGPD a eles. As referências a artigos da LGPD indicam onde estão os
+> princípios usados como referência; a definição do enquadramento de cada cruzamento real cabe às
+> áreas jurídicas e aos responsáveis pela proteção de dados de cada organização.
 
 ---
 
@@ -24,7 +25,9 @@ O cruzamento só se justifica com uma **finalidade específica, explícita e inf
 | Garantir acesso a direitos | Encontrar pessoas do cadastro operacional que ainda não constam da lista governamental de um programa |
 | Qualidade e continuidade do atendimento | Unificar o histórico de uma pessoa registrada mais de uma vez (deduplicação) |
 
-**Bases legais possíveis** (a escolha depende de quem é o controlador e da finalidade):
+**Bases legais possíveis para organizações sujeitas à LGPD** (a escolha depende de quem é o
+controlador e da finalidade; organizações com marco próprio seguem as hipóteses equivalentes das
+suas políticas):
 
 | Situação | Base legal (LGPD) |
 |---|---|
@@ -58,6 +61,9 @@ Regras práticas:
 - a tabela final de correspondências (`id_a`, `id_b`) é o único produto que precisa permanecer.
 
 ## 3. Papéis
+
+Os papéis abaixo seguem as definições da LGPD; políticas de outras organizações usam papéis
+equivalentes, às vezes com outros nomes.
 
 | Papel (LGPD) | Quem, num cruzamento típico | Responsabilidades |
 |---|---|---|
@@ -97,9 +103,9 @@ de blocagem. O responsável completa os demais campos:
 - **Há casos que nenhum limiar resolve.** No relatório, os falsos positivos com pontuação alta são
   gêmeos sintéticos: mesma mãe, mesma data e mesmo município, só o primeiro nome muda. Sem documento,
   o modelo não tem como separá-los; uma pessoa, com contexto, tem.
-- **Direito à revisão** (art. 20): o titular pode pedir a revisão de decisões tomadas unicamente com
+- **Direito à revisão** (art. 20 da LGPD, usado aqui como referência): o titular pode pedir a revisão de decisões tomadas unicamente com
   base em tratamento automatizado que afetem seus interesses. Manter uma faixa de revisão humana e
-  registrar a decisão é a forma prática de cumprir esse dever.
+  registrar a decisão é a forma prática de seguir esse princípio.
 
 ### Quem acessa
 
@@ -147,7 +153,7 @@ demonstração, que não é gravado em lugar nenhum.
 | Limite | O que significa | Mitigação |
 |---|---|---|
 | **Ataque de dicionário** | Nomes e datas formam um espaço pequeno. Quem tem o sal pode gerar hashes de uma lista de nomes candidatos e descobrir quem está na outra base. A outra organização **tem o sal**. | Acordo que proíba a reidentificação; sal guardado por um terceiro de confiança, que recebe os hashes e devolve só os pares; destruir o sal ao final |
-| **Continua sendo dado pessoal** | Hash com sal é pseudonimização, não anonimização (art. 12 e art. 13, § 4º). A LGPD se aplica integralmente. | Mesmo cuidado da base em claro: base legal, acordo, segurança e retenção |
+| **Continua sendo dado pessoal** | Hash com sal é pseudonimização, não anonimização (ver arts. 12 e 13, § 4º, da LGPD). O dado continua sendo pessoal e pede os mesmos cuidados. | Mesmo cuidado da base em claro: base legal, acordo, segurança e retenção |
 | **Precisa de acordo de compartilhamento** | Esconder os nomes não substitui a base legal nem o acordo entre as partes. | Acordo com finalidade, campos, proibição de reidentificação, retenção, destruição do sal e direito de auditoria |
 | **Perda do pareamento aproximado** | Um erro de digitação ou uma data diferente gera outro hash. Nos dados sintéticos, a cascata de chaves acerta 100% dos pares que encontra, mas o recall cai para **83,6%**, contra **94,8%** do modo aproximado automático e **99,4%** com revisão manual (números em `reports/metricas.json`). | Usar a chave fonética; aceitar a perda como custo da privacidade; avaliar técnicas de *privacy-preserving record linkage* com filtros de Bloom (próximo passo do projeto) |
 | **Ataque de frequência** | Sobrenomes muito comuns geram hashes muito frequentes, o que dá pistas mesmo sem o sal. | Não divulgar os arquivos de hashes; combinar chaves para reduzir as repetições |

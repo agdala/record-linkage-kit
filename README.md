@@ -4,7 +4,7 @@
 [![relatório](https://github.com/agdala/record-linkage-kit/actions/workflows/pages.yml/badge.svg)](https://agdala.github.io/record-linkage-kit/)
 
 Deduplicação e cruzamento de bases cadastrais de pessoas (**record linkage**) em Python, com
-governança de dados e LGPD. Um cadastro operacional de **5.000 registros** é cruzado com uma lista
+governança de dados, usando os princípios da LGPD como referência de boas práticas. Um cadastro operacional de **5.000 registros** é cruzado com uma lista
 governamental de **3.000 registros**, cheia de erros realistas, e o resultado é medido contra um
 gabarito.
 
@@ -312,8 +312,13 @@ blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto 
 
 ## 6. Proteção de dados
 
+O projeto adota os princípios da LGPD (finalidade, necessidade, segurança, minimização) como
+**referência de boas práticas**. Cada organização que fizer um cruzamento real deve observar o marco
+legal e as políticas internas de proteção de dados aplicáveis a ela; organismos internacionais, por
+exemplo, têm privilégios e imunidades e políticas próprias. A nota não é um parecer jurídico.
+
 A nota completa está em [`docs/protecao_de_dados.md`](docs/protecao_de_dados.md): finalidade e base
-legal (LGPD), minimização, papéis de controlador e operador, registro do cruzamento, retenção, quem
+legal, minimização, papéis de controlador e operador, registro do cruzamento, retenção, quem
 acessa a fila de revisão e por que existe revisão humana.
 
 **Modo pseudonimizado** ([`pseudonymize.py`](src/rlk/pseudonymize.py)): duas organizações combinam
@@ -322,7 +327,7 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 
 | Limite | Consequência |
 |---|---|
-| Ataque de dicionário | Quem tem o sal (inclusive a outra parte) pode testar listas de nomes e datas. O hash é **pseudonimização, não anonimização**: a LGPD continua valendo. |
+| Ataque de dicionário | Quem tem o sal (inclusive a outra parte) pode testar listas de nomes e datas. O hash é **pseudonimização, não anonimização**: continua sendo dado pessoal. |
 | Acordo de compartilhamento | Esconder os nomes não dispensa base legal, acordo, proibição de reidentificação e destruição do sal. |
 | Perda do pareamento aproximado | Um erro de digitação muda o hash. Recall de 83,6%, contra 94,8% (aproximado) e 99,4% (com revisão). |
 
@@ -337,7 +342,7 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 | **União de três regras de blocagem** | Nenhuma regra isolada passa de 93% de completude; a união chega a 99,4% e ainda corta 99,07% dos pares. |
 | **Média ponderada que ignora campos ausentes** | A falta de documento (40% em B) ou do nome da mãe não deve derrubar a pontuação de um par que coincide em todo o resto. |
 | **Jaro-Winkler também com tokens ordenados** | Recupera sobrenomes invertidos sem uma comparação palavra a palavra mais cara. |
-| **Dois limiares e revisão humana** | Os falsos positivos de pontuação alta (gêmeos) não se resolvem com limiar. A revisão cobre a faixa em que o modelo é incerto, e o art. 20 da LGPD garante a revisão de decisões automatizadas. |
+| **Dois limiares e revisão humana** | Os falsos positivos de pontuação alta (gêmeos) não se resolvem com limiar. A revisão cobre a faixa em que o modelo é incerto, em linha com o princípio de revisão de decisões automatizadas (art. 20 da LGPD). |
 | **Resolução 1:1 gulosa** | Simples, determinística e suficiente quando cada pessoa aparece uma vez em B. Um único passe serve a todos os limiares da avaliação. |
 | **HMAC-SHA256 em vez de SHA-256(sal + valor)** | É a construção padrão para hash com segredo e evita o ataque de extensão de comprimento do SHA-256 puro; continua sendo "SHA-256 com sal secreto". |
 | **Relatório HTML único, sem bibliotecas externas** | Gráfico em SVG gerado em Python, abre offline e é publicado no Pages como um arquivo só. |
@@ -397,7 +402,8 @@ record-linkage-kit/
 ## English summary
 
 **record-linkage-kit** is a portfolio project on deduplication and linkage of person registries
-with data governance under Brazil's data protection law (LGPD), built on **100% synthetic data**.
+with data governance, using the principles of Brazil's data protection law (LGPD) as a
+good-practice reference, built on **100% synthetic data**.
 A synthetic operational registry (5,000 records, 3% internal duplicates) is linked to a synthetic
 government list (3,000 records, 60% overlap) that carries realistic errors: missing accents and
 particles, typos, reordered and abbreviated surnames, swapped day and month, 01/01 placeholder
