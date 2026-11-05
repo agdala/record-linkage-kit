@@ -72,3 +72,20 @@ def test_evaluate_is_deterministic(evaluated, tmp_path, sample_dir):
     run_link(cfg, tmp_path)
     assert run_evaluate(cfg, tmp_path) == m
     assert (tmp_path / "reports" / "relatorio.html").read_text() == first
+
+
+def test_match_scenarios_trade_false_positives_for_queue():
+    from rlk.evaluate import match_scenarios
+
+    assigned = pd.DataFrame({
+        "id_1": ["A1", "A2", "A3", "A4"], "id_2": ["B1", "B2", "B3", "B4"],
+        "pontuacao": [0.97, 0.92, 0.87, 0.75],
+        "sim_nome_mae": [1.0, 1.0, 0.5, 1.0],
+        "nivel_data": ["igual", "igual", "so_ano", "igual"],
+    })
+    truth = {("A1", "B1"), ("A3", "B3"), ("A4", "B4")}  # A2-B2 is a twin false positive
+    rows = {r["limiar_match"]: r for r in match_scenarios(assigned, truth, 3, review=0.70)}
+    assert rows[0.85]["fp"] == 1 and rows[0.85]["fp_perfil_gemeos"] == 1
+    assert rows[0.85]["fila_revisao"] == 1
+    assert rows[0.95]["fp"] == 0 and rows[0.95]["fila_revisao"] == 3
+    assert rows[0.95]["recall_automatico"] == pytest.approx(1 / 3)

@@ -142,6 +142,38 @@
     "recall": 0.9522,
     "f1": 0.9722
   },
+  "cenarios_limiar": [
+    {
+      "limiar_match": 0.85,
+      "pares_automaticos": 1726,
+      "fp": 12,
+      "fp_perfil_gemeos": 9,
+      "precisao": 0.993,
+      "recall_automatico": 0.9522,
+      "fila_revisao": 148,
+      "fila_verdadeiros": 76
+    },
+    {
+      "limiar_match": 0.9,
+      "pares_automaticos": 1710,
+      "fp": 4,
+      "fp_perfil_gemeos": 4,
+      "precisao": 0.9977,
+      "recall_automatico": 0.9478,
+      "fila_revisao": 164,
+      "fila_verdadeiros": 84
+    },
+    {
+      "limiar_match": 0.95,
+      "pares_automaticos": 1546,
+      "fp": 0,
+      "fp_perfil_gemeos": 0,
+      "precisao": 1.0,
+      "recall_automatico": 0.8589,
+      "fila_revisao": 328,
+      "fila_verdadeiros": 244
+    }
+  ],
   "fila_revisao": {
     "pares": 148,
     "pares_verdadeiros": 76,

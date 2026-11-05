@@ -12,6 +12,7 @@ from rlk.link import RAW_FIELDS, resolve_one_to_one
 from rlk.standardize import read_registry
 
 SWEEP = [round(0.50 + 0.05 * i, 2) for i in range(10)]  # 0.50 ... 0.95
+MATCH_SCENARIOS = [0.85, 0.90, 0.95]  # candidate auto-match thresholds compared in the README
 
 ERROR_LABELS = {
     "sem_acento": "acentos removidos",
@@ -54,6 +55,31 @@ def threshold_sweep(assigned: pd.DataFrame, truth: set, n_true: int,
         p, r, f = _prf(tp, len(sel), n_true)
         rows.append({"limiar": t, "pares": int(len(sel)), "vp": tp, "fp": int(len(sel) - tp),
                      "fn": int(n_true - tp), "precisao": p, "recall": r, "f1": f})
+    return rows
+
+
+def match_scenarios(assigned: pd.DataFrame, truth: set, n_true: int, review: float,
+                    thresholds: list[float] = MATCH_SCENARIOS) -> list[dict]:
+    """Cost of each candidate auto-match threshold, keeping the review threshold fixed.
+
+    For each ``t``: false positives accepted automatically (and how many have the twin profile:
+    same mother and same birth date), automatic recall and the size of the review queue
+    (pairs between ``review`` and ``t``).
+    """
+    hit = [(a, b) in truth for a, b in zip(assigned["id_1"], assigned["id_2"], strict=True)]
+    asg = assigned.assign(correto=hit)
+    rows = []
+    for t in thresholds:
+        auto = asg[asg["pontuacao"] >= t]
+        fp = auto[~auto["correto"]]
+        twins = fp[(fp["sim_nome_mae"].fillna(0) >= 0.95) & (fp["nivel_data"] == "igual")]
+        queue = asg[asg["pontuacao"].between(review, t, inclusive="left")]
+        tp = int(auto["correto"].sum())
+        p, r, _ = _prf(tp, len(auto), n_true)
+        rows.append({"limiar_match": t, "pares_automaticos": int(len(auto)), "fp": int(len(fp)),
+                     "fp_perfil_gemeos": int(len(twins)), "precisao": p, "recall_automatico": r,
+                     "fila_revisao": int(len(queue)),
+                     "fila_verdadeiros": int(queue["correto"].sum())})
     return rows
 
 
@@ -268,6 +294,7 @@ def run_evaluate(cfg: dict, root: str | Path = ".") -> dict:
         "blocagem": blocking,
         "por_limiar": sweep,
         "automatico": configured[0],
+        "cenarios_limiar": match_scenarios(assigned, truth, n_true_b, thr["revisao"]),
         "fila_revisao": {
             "pares": int(len(queue)),
             "pares_verdadeiros": int(queue_true),
