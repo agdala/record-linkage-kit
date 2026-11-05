@@ -119,29 +119,29 @@ Avaliação contra o gabarito.</p>
 
 <h2>1. Resumo executivo</h2>
 <div class="tiles">
-  <div class="tile"><div class="v">99,3%</div>
-    <div class="k">precisão dos matches automáticos (limiar 0,85)</div></div>
-  <div class="tile"><div class="v">95,2%</div>
+  <div class="tile"><div class="v">99,8%</div>
+    <div class="k">precisão dos matches automáticos (limiar 0,90)</div></div>
+  <div class="tile"><div class="v">94,8%</div>
     <div class="k">recall automático (registros de B com par encontrados)</div></div>
   <div class="tile"><div class="v">99,4%</div>
     <div class="k">recall após a revisão manual</div></div>
-  <div class="tile"><div class="v">148</div>
-    <div class="k">pares na fila de revisão (4,9% da base B)</div></div>
+  <div class="tile"><div class="v">164</div>
+    <div class="k">pares na fila de revisão (5,5% da base B)</div></div>
   <div class="tile"><div class="v">99,07%</div>
     <div class="k">redução de pares pela blocagem</div></div>
 </div>
 <div class="card">
 <p>Dos 1.800 registros da base B que têm par na base A,
-1.714 foram pareados automaticamente corretamente. Entre os
-1.726 pares automáticos, 12 são falsos positivos. A fila de revisão tem
-148 pares, dos quais 76
+1.706 foram pareados automaticamente corretamente. Entre os
+1.710 pares automáticos, 4 são falsos positivos. A fila de revisão tem
+164 pares, dos quais 84
 (51%) são a mesma pessoa: com revisão humana correta,
 o recall sobe para 99,4%.</p>
 <p>A blocagem reduziu 15.000.000 comparações possíveis para
 138.897 e manteve 99,4% dos pares
 verdadeiros entre os candidatos. Esse valor é o teto do recall.</p>
 <p><strong>Decisão sugerida:</strong> aceitar automaticamente a partir de
-0,85, revisar entre 0,70 e 0,85
+0,90, revisar entre 0,70 e 0,90
 e tratar à parte os casos com mesma mãe e mesma data (perfil de gêmeos), que nenhum limiar separa
 sem documento (seção 6).</p>
 </div>
@@ -212,8 +212,8 @@ qualquer registro de A da mesma pessoa.</p>
   <line x1="311.6" x2="311.6" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>
   <text x="315.6" y="274">revisão</text>
   
-  <line x1="506.2" x2="506.2" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="510.2" y="274">match</text>
+  <line x1="571.1" x2="571.1" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="575.1" y="274">match</text>
   
   <line id="cross" x1="0" x2="0" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" opacity="0"/>
   
@@ -356,12 +356,12 @@ qualquer registro de A da mesma pessoa.</p>
 <td class="n">31</td><td class="n">56</td><td class="n">98,2%</td>
 <td class="n">96,9%</td><td class="n">97,6%</td></tr>
 
-<tr class="hl">
+<tr>
 <td class="n">0,85</td><td class="n">1.726</td><td class="n">1.714</td>
 <td class="n">12</td><td class="n">86</td><td class="n">99,3%</td>
 <td class="n">95,2%</td><td class="n">97,2%</td></tr>
 
-<tr>
+<tr class="hl">
 <td class="n">0,90</td><td class="n">1.710</td><td class="n">1.706</td>
 <td class="n">4</td><td class="n">94</td><td class="n">99,8%</td>
 <td class="n">94,8%</td><td class="n">97,2%</td></tr>
@@ -399,13 +399,13 @@ união das regras. A completude de cada regra mostra quantos pares verdadeiros e
 
 <h2>4. Fila de revisão manual</h2>
 <div class="card">
-<p><strong>148 pares</strong> com pontuação entre
-0,70 e 0,85, em
+<p><strong>164 pares</strong> com pontuação entre
+0,70 e 0,90, em
 <code>reports/revisao_manual.csv</code>, com os campos das duas bases lado a lado e uma coluna
-<code>decisao_revisor</code>. 76 deles
+<code>decisao_revisor</code>. 84 deles
 (51%) são a mesma pessoa.</p>
 <p>Com revisão correta, o resultado final fica em precisão
-99,3% e recall
+99,8% e recall
 99,4%. Subir o limiar de match reduz falsos positivos, mas
 aumenta a fila; a tabela da seção 2 mostra essa troca.</p>
 </div>
@@ -418,37 +418,37 @@ pode ter vários erros). Ordenado do mais difícil para o mais fácil.</p>
 <thead><tr><th>Erro</th><th class="n">Registros</th><th class="n">Recall automático</th><th class="n">Recall com revisão</th></tr></thead>
 <tbody>
 
-<tr><td>data ausente</td><td class="n">99</td><td class="n">91,9%</td>
+<tr><td>data ausente</td><td class="n">99</td><td class="n">89,9%</td>
 <td class="n">91,9%</td></tr>
 
-<tr><td>mudou de município</td><td class="n">195</td><td class="n">93,3%</td>
+<tr><td>mudou de município</td><td class="n">195</td><td class="n">89,2%</td>
 <td class="n">97,4%</td></tr>
 
-<tr><td>erro de digitação no nome</td><td class="n">464</td><td class="n">94,6%</td>
+<tr><td>erro de digitação no nome</td><td class="n">464</td><td class="n">93,8%</td>
 <td class="n">97,8%</td></tr>
 
-<tr><td>nome da mãe ausente</td><td class="n">269</td><td class="n">94,8%</td>
+<tr><td>nome da mãe ausente</td><td class="n">269</td><td class="n">93,3%</td>
 <td class="n">98,5%</td></tr>
 
-<tr><td>sobrenomes em outra ordem</td><td class="n">178</td><td class="n">94,4%</td>
+<tr><td>sobrenomes em outra ordem</td><td class="n">178</td><td class="n">93,3%</td>
 <td class="n">98,9%</td></tr>
 
-<tr><td>documento ausente</td><td class="n">736</td><td class="n">95,4%</td>
+<tr><td>documento ausente</td><td class="n">736</td><td class="n">94,7%</td>
 <td class="n">99,5%</td></tr>
 
-<tr><td>acentos removidos</td><td class="n">1.099</td><td class="n">95,2%</td>
+<tr><td>acentos removidos</td><td class="n">1.099</td><td class="n">94,7%</td>
 <td class="n">99,6%</td></tr>
 
-<tr><td>partículas removidas</td><td class="n">207</td><td class="n">94,7%</td>
+<tr><td>partículas removidas</td><td class="n">207</td><td class="n">94,2%</td>
 <td class="n">100,0%</td></tr>
 
-<tr><td>erro de digitação no nome da mãe</td><td class="n">149</td><td class="n">96,0%</td>
+<tr><td>erro de digitação no nome da mãe</td><td class="n">149</td><td class="n">94,0%</td>
 <td class="n">100,0%</td></tr>
 
-<tr><td>nome abreviado</td><td class="n">75</td><td class="n">98,7%</td>
+<tr><td>nome abreviado</td><td class="n">75</td><td class="n">94,7%</td>
 <td class="n">100,0%</td></tr>
 
-<tr><td>dia e mês trocados</td><td class="n">60</td><td class="n">95,0%</td>
+<tr><td>dia e mês trocados</td><td class="n">60</td><td class="n">91,7%</td>
 <td class="n">100,0%</td></tr>
 
 <tr><td>data aproximada (01/01)</td><td class="n">80</td><td class="n">5,0%</td>
@@ -578,27 +578,27 @@ no gabarito e as similaridades calculadas.</p>
 
 <div class="card case scroll">
 <h3>5. Não match na fila de revisão</h3>
-<div class="meta">A04192 × B00688 · pontuação 0,839</div>
+<div class="meta">A00083 × B00774 · pontuação 0,891</div>
 <table>
 <thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
 <tbody>
 
-<tr><td>nome_completo</td><td>Joana Nascimento Martins</td><td>YAGO MARTINS NASCIMENTO</td></tr>
+<tr><td>nome_completo</td><td>Ana Julia de Sousa Silveira</td><td>ELOAH SOUSA SILEVIRA</td></tr>
 
-<tr><td>nome_mae</td><td>Stella Lima Nascimento</td><td>STELLA LIMA NASCIMENTO</td></tr>
+<tr><td>nome_mae</td><td>Bianca Camargo de Sousa</td><td>BIANCA CAMARGO DE SOUSA</td></tr>
 
-<tr><td>data_nascimento</td><td>1987-07-22</td><td>22/07/1987</td></tr>
+<tr><td>data_nascimento</td><td>2021-02-21</td><td>21/02/2021</td></tr>
 
-<tr><td>sexo</td><td>F</td><td>MASCULINO</td></tr>
+<tr><td>sexo</td><td>F</td><td>FEMININO</td></tr>
 
-<tr><td>municipio</td><td>Curitiba</td><td>CURITIBA</td></tr>
+<tr><td>municipio</td><td>Joinville</td><td>JOINVILLE</td></tr>
 
-<tr><td>uf</td><td>PR</td><td>PR</td></tr>
+<tr><td>uf</td><td>SC</td><td>SC</td></tr>
 
-<tr><td>documento</td><td>137.910.790-34</td><td>(vazio)</td></tr>
+<tr><td>documento</td><td>(vazio)</td><td>17573004656</td></tr>
 
 </tbody></table>
-<p style="margin-top: 10px">Pessoas diferentes com pontuação 0.84: nome com similaridade 0.75 e data no nível &#39;igual&#39;; o nome da mãe é parecido (similaridade 1.00), o que sugere parentes. É o tipo de par que o revisor deve rejeitar, e o motivo de a faixa de revisão não ser aceita automaticamente.</p>
+<p style="margin-top: 10px">Pessoas diferentes com pontuação 0.89: nome com similaridade 0.74 e data no nível &#39;igual&#39;; o nome da mãe é parecido (similaridade 1.00), o que sugere parentes. É o tipo de par que o revisor deve rejeitar, e o motivo de a faixa de revisão não ser aceita automaticamente.</p>
 </div>
 
 
@@ -610,8 +610,8 @@ pareamento passa a ser exato: qualquer diferença na chave impede o par.</p>
 <table>
 <thead><tr><th>Modo</th><th class="n">Pares aceitos</th><th class="n">Precisão</th><th class="n">Recall</th></tr></thead>
 <tbody>
-<tr><td>Aproximado (nomes em claro, limiar 0,85)</td><td class="n">1.726</td>
-<td class="n">99,3%</td><td class="n">95,2%</td></tr>
+<tr><td>Aproximado (nomes em claro, limiar 0,90)</td><td class="n">1.710</td>
+<td class="n">99,8%</td><td class="n">94,8%</td></tr>
 
 <tr><td>Pseudonimizado: documento</td><td class="n">954</td>
 <td class="n">100,0%</td><td class="n">53,0%</td></tr>

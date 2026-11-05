@@ -38,7 +38,7 @@ niveis_data:
   diferente: 0.0
 
 limiares:
-  match: 0.85      # >= match: pareamento automático
+  match: 0.90      # >= match: pareamento automático (ver README, "Escolha do limiar")
   revisao: 0.70    # entre revisao e match: fila de revisão manual; abaixo: não match
 
 # Deduplicação da base A (mesma lógica, comparando a base com ela mesma).

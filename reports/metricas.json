@@ -7,7 +7,7 @@
     "pares_verdadeiros_dedup": 150
   },
   "limiares": {
-    "match": 0.85,
+    "match": 0.9,
     "revisao": 0.7
   },
   "blocagem": {
@@ -133,14 +133,14 @@
     }
   ],
   "automatico": {
-    "limiar": 0.85,
-    "pares": 1726,
-    "vp": 1714,
-    "fp": 12,
-    "fn": 86,
-    "precisao": 0.993,
-    "recall": 0.9522,
-    "f1": 0.9722
+    "limiar": 0.9,
+    "pares": 1710,
+    "vp": 1706,
+    "fp": 4,
+    "fn": 94,
+    "precisao": 0.9977,
+    "recall": 0.9478,
+    "f1": 0.9721
   },
   "cenarios_limiar": [
     {
@@ -175,77 +175,77 @@
     }
   ],
   "fila_revisao": {
-    "pares": 148,
-    "pares_verdadeiros": 76,
-    "proporcao_verdadeiros": 0.5135,
+    "pares": 164,
+    "pares_verdadeiros": 84,
+    "proporcao_verdadeiros": 0.5122,
     "recall_com_revisao": 0.9944,
-    "precisao_com_revisao_perfeita": 0.9933
+    "precisao_com_revisao_perfeita": 0.9978
   },
   "recall_por_erro": [
     {
       "erro": "data ausente",
       "registros": 99,
-      "recall_automatico": 0.9192,
+      "recall_automatico": 0.899,
       "recall_com_revisao": 0.9192
     },
     {
       "erro": "mudou de município",
       "registros": 195,
-      "recall_automatico": 0.9333,
+      "recall_automatico": 0.8923,
       "recall_com_revisao": 0.9744
     },
     {
       "erro": "erro de digitação no nome",
       "registros": 464,
-      "recall_automatico": 0.9461,
+      "recall_automatico": 0.9375,
       "recall_com_revisao": 0.9784
     },
     {
       "erro": "nome da mãe ausente",
       "registros": 269,
-      "recall_automatico": 0.948,
+      "recall_automatico": 0.9331,
       "recall_com_revisao": 0.9851
     },
     {
       "erro": "sobrenomes em outra ordem",
       "registros": 178,
-      "recall_automatico": 0.9438,
+      "recall_automatico": 0.9326,
       "recall_com_revisao": 0.9888
     },
     {
       "erro": "documento ausente",
       "registros": 736,
-      "recall_automatico": 0.9538,
+      "recall_automatico": 0.947,
       "recall_com_revisao": 0.9946
     },
     {
       "erro": "acentos removidos",
       "registros": 1099,
-      "recall_automatico": 0.9518,
+      "recall_automatico": 0.9472,
       "recall_com_revisao": 0.9964
     },
     {
       "erro": "partículas removidas",
       "registros": 207,
-      "recall_automatico": 0.9469,
+      "recall_automatico": 0.942,
       "recall_com_revisao": 1.0
     },
     {
       "erro": "erro de digitação no nome da mãe",
       "registros": 149,
-      "recall_automatico": 0.9597,
+      "recall_automatico": 0.9396,
       "recall_com_revisao": 1.0
     },
     {
       "erro": "nome abreviado",
       "registros": 75,
-      "recall_automatico": 0.9867,
+      "recall_automatico": 0.9467,
       "recall_com_revisao": 1.0
     },
     {
       "erro": "dia e mês trocados",
       "registros": 60,
-      "recall_automatico": 0.95,
+      "recall_automatico": 0.9167,
       "recall_com_revisao": 1.0
     },
     {
