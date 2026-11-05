@@ -6,6 +6,7 @@ import argparse
 import sys
 
 from rlk.config import load_config
+from rlk.evaluate import run_evaluate
 from rlk.generate import GeneratorConfig, generate
 from rlk.link import run_link
 
@@ -33,6 +34,19 @@ def _cmd_link(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_evaluate(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    m = run_evaluate(cfg)
+    a, f = m["automatico"], m["fila_revisao"]
+    print(f"Limiar {m['limiares']['match']}: precisão {a['precisao']:.2%}, recall "
+          f"{a['recall']:.2%}, F1 {a['f1']:.2%}")
+    print(f"Fila de revisão: {f['pares']} pares; recall com revisão {f['recall_com_revisao']:.2%}")
+    print(f"Blocagem: redução {m['blocagem']['taxa_reducao']:.2%}, completude "
+          f"{m['blocagem']['completude_pares']:.2%}")
+    print(f"Relatório: {cfg['saida']}/relatorio.html")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="rlk", description="Record linkage com governança de dados"
@@ -49,6 +63,10 @@ def build_parser() -> argparse.ArgumentParser:
     lk = sub.add_parser("link", help="padroniza, bloca, compara, pontua e classifica os pares")
     lk.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
     lk.set_defaults(func=_cmd_link)
+
+    ev = sub.add_parser("evaluate", help="compara com o gabarito e gera o relatório HTML")
+    ev.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
+    ev.set_defaults(func=_cmd_evaluate)
     return parser
 
 

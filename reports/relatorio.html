@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de record linkage</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-0: #f4f4f1;
+  --surface-1: #fcfcfb;
+  --border: #e2e1dc;
+  --grid: #ebeae6;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77766f;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --accent-bg: #eaf2fc;
+  --warn-bg: #fdf3e1;
+  --warn-ink: #7a4b00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --border: #33322f;
+    --grid: #2a2a28;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #9a998f;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --accent-bg: #1b2a3d;
+    --warn-bg: #3a2c12;
+    --warn-ink: #f2c46d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121211;
+  --surface-1: #1a1a19;
+  --border: #33322f;
+  --grid: #2a2a28;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #9a998f;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --accent-bg: #1b2a3d;
+  --warn-bg: #3a2c12;
+  --warn-ink: #f2c46d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--surface-0); color: var(--text-primary);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: 20px; margin: 40px 0 12px; }
+h3 { font-size: 16px; margin: 0 0 8px; }
+p { margin: 0 0 12px; color: var(--text-secondary); max-width: 72ch; }
+.lead { font-size: 16px; }
+.note {
+  background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px;
+  padding: 10px 14px; font-size: 14px; margin: 16px 0;
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px;
+}
+.tile .v { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile .k { color: var(--text-secondary); font-size: 13px; }
+.card {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; margin: 12px 0;
+}
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--grid); text-align: left; }
+th { color: var(--text-secondary); font-weight: 600; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.hl td { background: var(--accent-bg); font-weight: 600; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 8px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px;
+  vertical-align: middle; margin-right: 6px; }
+svg text { font-size: 12px; fill: var(--text-secondary); font-family: inherit; }
+.chart-wrap { position: relative; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12); opacity: 0; transition: opacity .1s; min-width: 150px;
+}
+.tip b { display: block; margin-bottom: 4px; }
+.tip span { display: flex; justify-content: space-between; gap: 12px;
+  font-variant-numeric: tabular-nums; }
+.case { border-left: 3px solid var(--series-1); }
+.case .meta { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
+.case td:first-child { color: var(--text-secondary); width: 22%; }
+footer { margin-top: 48px; color: var(--text-muted); font-size: 13px; }
+@media (max-width: 600px) { h1 { font-size: 23px; } .tile .v { font-size: 23px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Record linkage de bases cadastrais</h1>
+<p class="lead">Cruzamento de um cadastro operacional (base A, 5.000 registros)
+com uma lista governamental (base B, 3.000 registros) e deduplicação da base A.
+Avaliação contra o gabarito.</p>
+<div class="note">Todos os registros deste relatório são <strong>100% sintéticos</strong>
+(gerados com Faker e semente fixa). Nenhum nome, documento ou data pertence a uma pessoa real.</div>
+
+<h2>1. Resumo executivo</h2>
+<div class="tiles">
+  <div class="tile"><div class="v">99,3%</div>
+    <div class="k">precisão dos matches automáticos (limiar 0,85)</div></div>
+  <div class="tile"><div class="v">95,2%</div>
+    <div class="k">recall automático (registros de B com par encontrados)</div></div>
+  <div class="tile"><div class="v">99,4%</div>
+    <div class="k">recall após a revisão manual</div></div>
+  <div class="tile"><div class="v">148</div>
+    <div class="k">pares na fila de revisão (4,9% da base B)</div></div>
+  <div class="tile"><div class="v">99,07%</div>
+    <div class="k">redução de pares pela blocagem</div></div>
+</div>
+<div class="card">
+<p>Dos 1.800 registros da base B que têm par na base A,
+1.714 foram pareados automaticamente corretamente. Entre os
+1.726 pares automáticos, 12 são falsos positivos. A fila de revisão tem
+148 pares, dos quais 76
+(51%) são a mesma pessoa: com revisão humana correta,
+o recall sobe para 99,4%.</p>
+<p>A blocagem reduziu 15.000.000 comparações possíveis para
+138.897 e manteve 99,4% dos pares
+verdadeiros entre os candidatos. Esse valor é o teto do recall.</p>
+<p><strong>Decisão sugerida:</strong> aceitar automaticamente a partir de
+0,85, revisar entre 0,70 e 0,85
+e tratar à parte os casos com mesma mãe e mesma data (perfil de gêmeos), que nenhum limiar separa
+sem documento (seção 6).</p>
+</div>
+
+<h2>2. Precisão, recall e F1 por limiar</h2>
+<p>Cada linha aceita todos os pares com pontuação maior ou igual ao limiar, depois da resolução
+1:1. O recall é medido por registro de B: um registro conta como encontrado se for ligado a
+qualquer registro de A da mesma pessoa.</p>
+<div class="card">
+<div class="legend">
+  <span><i style="background: var(--series-1)"></i>Precisão</span><span><i style="background: var(--series-2)"></i>Recall</span><span><i style="background: var(--series-3)"></i>F1</span>
+  <span><i style="background: var(--text-muted); height: 1px"></i>limiares configurados</span>
+</div>
+<div class="chart-wrap scroll" id="chart">
+<svg viewBox="0 0 720 320" width="100%" role="img"
+     aria-label="Precisão, recall e F1 por limiar de pontuação" style="min-width: 520px; display: block">
+  
+  <line x1="52" x2="636" y1="280.0" y2="280.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="284.0" text-anchor="end">60%</text>
+  
+  <line x1="52" x2="636" y1="247.0" y2="247.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="251.0" text-anchor="end">65%</text>
+  
+  <line x1="52" x2="636" y1="214.0" y2="214.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="218.0" text-anchor="end">70%</text>
+  
+  <line x1="52" x2="636" y1="181.0" y2="181.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="185.0" text-anchor="end">75%</text>
+  
+  <line x1="52" x2="636" y1="148.0" y2="148.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="152.0" text-anchor="end">80%</text>
+  
+  <line x1="52" x2="636" y1="115.0" y2="115.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="119.0" text-anchor="end">85%</text>
+  
+  <line x1="52" x2="636" y1="82.0" y2="82.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="86.0" text-anchor="end">90%</text>
+  
+  <line x1="52" x2="636" y1="49.0" y2="49.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="53.0" text-anchor="end">95%</text>
+  
+  <line x1="52" x2="636" y1="16.0" y2="16.0" stroke="var(--grid)" stroke-width="1"/>
+  <text x="44" y="20.0" text-anchor="end">100%</text>
+  
+  
+  <text x="52.0" y="298" text-anchor="middle">0,50</text>
+  
+  <text x="116.9" y="298" text-anchor="middle">0,55</text>
+  
+  <text x="181.8" y="298" text-anchor="middle">0,60</text>
+  
+  <text x="246.7" y="298" text-anchor="middle">0,65</text>
+  
+  <text x="311.6" y="298" text-anchor="middle">0,70</text>
+  
+  <text x="376.4" y="298" text-anchor="middle">0,75</text>
+  
+  <text x="441.3" y="298" text-anchor="middle">0,80</text>
+  
+  <text x="506.2" y="298" text-anchor="middle">0,85</text>
+  
+  <text x="571.1" y="298" text-anchor="middle">0,90</text>
+  
+  <text x="636.0" y="298" text-anchor="middle">0,95</text>
+  
+  <text x="344.0" y="316" text-anchor="middle">limiar de pontuação</text>
+  
+  <line x1="311.6" x2="311.6" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="315.6" y="274">revisão</text>
+  
+  <line x1="506.2" x2="506.2" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="510.2" y="274">match</text>
+  
+  <line id="cross" x1="0" x2="0" y1="16" y2="280" stroke="var(--text-muted)" stroke-width="1" opacity="0"/>
+  
+  <path d="M52.0,223.0 L116.9,156.9 L181.8,73.9 L246.7,49.3 L311.6,45.6 L376.4,34.0 L441.3,27.5 L506.2,20.6 L571.1,17.5 L636.0,16.0" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <circle cx="52.0" cy="223.0" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="116.9" cy="156.9" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="181.8" cy="73.9" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="246.7" cy="49.3" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="311.6" cy="45.6" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="376.4" cy="34.0" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="441.3" cy="27.5" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="506.2" cy="20.6" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="571.1" cy="17.5" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="636.0" cy="16.0" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <text x="646.0" y="20.0" style="fill: var(--text-primary)">Precisão</text>
+  
+  <path d="M52.0,19.7 L116.9,19.7 L181.8,19.7 L246.7,19.7 L311.6,19.7 L376.4,20.8 L441.3,36.5 L506.2,47.5 L571.1,50.5 L636.0,109.1" fill="none" stroke="var(--series-2)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <circle cx="52.0" cy="19.7" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="116.9" cy="19.7" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="181.8" cy="19.7" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="246.7" cy="19.7" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="311.6" cy="19.7" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="376.4" cy="20.8" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="441.3" cy="36.5" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="506.2" cy="47.5" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="571.1" cy="50.5" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="636.0" cy="109.1" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <text x="646.0" y="113.1" style="fill: var(--text-primary)">Recall</text>
+  
+  <path d="M52.0,139.9 L116.9,96.3 L181.8,47.9 L246.7,34.8 L311.6,32.9 L376.4,27.4 L441.3,32.0 L506.2,34.3 L571.1,34.4 L636.0,66.1" fill="none" stroke="var(--series-3)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <circle cx="52.0" cy="139.9" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="116.9" cy="96.3" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="181.8" cy="47.9" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="246.7" cy="34.8" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="311.6" cy="32.9" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="376.4" cy="27.4" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="441.3" cy="32.0" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="506.2" cy="34.3" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="571.1" cy="34.4" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <circle cx="636.0" cy="66.1" r="4" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/>
+  
+  <text x="646.0" y="70.1" style="fill: var(--text-primary)">F1</text>
+  
+  
+  <rect class="hit" data-i="0" x="19.6" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="1" x="84.4" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="2" x="149.3" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="3" x="214.2" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="4" x="279.1" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="5" x="344.0" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="6" x="408.9" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="7" x="473.8" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="8" x="538.7" y="16" width="64.9" height="264" fill="transparent"/>
+  
+  <rect class="hit" data-i="9" x="603.6" y="16" width="64.9" height="264" fill="transparent"/>
+  
+</svg>
+<div class="tip" id="tip"></div>
+</div>
+</div>
+
+<div class="card scroll">
+<table>
+<thead><tr><th class="n">Limiar</th><th class="n">Pares aceitos</th><th class="n">VP</th><th class="n">FP</th>
+<th class="n">FN</th><th class="n">Precisão</th><th class="n">Recall</th><th class="n">F1</th></tr></thead>
+<tbody>
+
+<tr>
+<td class="n">0,50</td><td class="n">2.608</td><td class="n">1.790</td>
+<td class="n">818</td><td class="n">10</td><td class="n">68,6%</td>
+<td class="n">99,4%</td><td class="n">81,2%</td></tr>
+
+<tr>
+<td class="n">0,55</td><td class="n">2.276</td><td class="n">1.790</td>
+<td class="n">486</td><td class="n">10</td><td class="n">78,6%</td>
+<td class="n">99,4%</td><td class="n">87,8%</td></tr>
+
+<tr>
+<td class="n">0,60</td><td class="n">1.962</td><td class="n">1.790</td>
+<td class="n">172</td><td class="n">10</td><td class="n">91,2%</td>
+<td class="n">99,4%</td><td class="n">95,2%</td></tr>
+
+<tr>
+<td class="n">0,65</td><td class="n">1.885</td><td class="n">1.790</td>
+<td class="n">95</td><td class="n">10</td><td class="n">95,0%</td>
+<td class="n">99,4%</td><td class="n">97,2%</td></tr>
+
+<tr>
+<td class="n">0,70</td><td class="n">1.874</td><td class="n">1.790</td>
+<td class="n">84</td><td class="n">10</td><td class="n">95,5%</td>
+<td class="n">99,4%</td><td class="n">97,4%</td></tr>
+
+<tr>
+<td class="n">0,75</td><td class="n">1.837</td><td class="n">1.787</td>
+<td class="n">50</td><td class="n">13</td><td class="n">97,3%</td>
+<td class="n">99,3%</td><td class="n">98,3%</td></tr>
+
+<tr>
+<td class="n">0,80</td><td class="n">1.775</td><td class="n">1.744</td>
+<td class="n">31</td><td class="n">56</td><td class="n">98,2%</td>
+<td class="n">96,9%</td><td class="n">97,6%</td></tr>
+
+<tr class="hl">
+<td class="n">0,85</td><td class="n">1.726</td><td class="n">1.714</td>
+<td class="n">12</td><td class="n">86</td><td class="n">99,3%</td>
+<td class="n">95,2%</td><td class="n">97,2%</td></tr>
+
+<tr>
+<td class="n">0,90</td><td class="n">1.710</td><td class="n">1.706</td>
+<td class="n">4</td><td class="n">94</td><td class="n">99,8%</td>
+<td class="n">94,8%</td><td class="n">97,2%</td></tr>
+
+<tr>
+<td class="n">0,95</td><td class="n">1.546</td><td class="n">1.546</td>
+<td class="n">0</td><td class="n">254</td><td class="n">100,0%</td>
+<td class="n">85,9%</td><td class="n">92,4%</td></tr>
+
+</tbody></table>
+<p style="margin-top: 8px; font-size: 13px">VP: verdadeiros positivos. FP: falsos positivos.
+FN: registros de B com par que ficaram sem o par correto. Linha destacada: limiar de match automático.</p>
+</div>
+
+<h2>3. Blocagem</h2>
+<p>Cada regra compara só registros com os mesmos valores nas chaves; o conjunto de candidatos é a
+união das regras. A completude de cada regra mostra quantos pares verdadeiros ela alcança sozinha.</p>
+<div class="card scroll">
+<table>
+<thead><tr><th>Regra</th><th class="n">Pares candidatos</th><th class="n">Completude dos pares</th></tr></thead>
+<tbody>
+
+<tr><td>uf_ano</td><td class="n">19.598</td><td class="n">84,6%</td></tr>
+
+<tr><td>fonetica_nome_sexo</td><td class="n">120.064</td><td class="n">92,8%</td></tr>
+
+<tr><td>fonetica_sobrenome_ano</td><td class="n">2.489</td><td class="n">80,2%</td></tr>
+
+<tr class="hl"><td>União das regras</td><td class="n">138.897</td>
+<td class="n">99,4%</td></tr>
+</tbody></table>
+<p style="margin-top: 8px; font-size: 13px">Pares possíveis sem blocagem:
+15.000.000. Taxa de redução: 99,07%.</p>
+</div>
+
+<h2>4. Fila de revisão manual</h2>
+<div class="card">
+<p><strong>148 pares</strong> com pontuação entre
+0,70 e 0,85, em
+<code>reports/revisao_manual.csv</code>, com os campos das duas bases lado a lado e uma coluna
+<code>decisao_revisor</code>. 76 deles
+(51%) são a mesma pessoa.</p>
+<p>Com revisão correta, o resultado final fica em precisão
+99,3% e recall
+99,4%. Subir o limiar de match reduz falsos positivos, mas
+aumenta a fila; a tabela da seção 2 mostra essa troca.</p>
+</div>
+
+<h3 style="margin-top: 20px">Recall por tipo de erro introduzido</h3>
+<p>Registros de B com par verdadeiro, separados pelo erro que receberam na geração (um registro
+pode ter vários erros). Ordenado do mais difícil para o mais fácil.</p>
+<div class="card scroll">
+<table>
+<thead><tr><th>Erro</th><th class="n">Registros</th><th class="n">Recall automático</th><th class="n">Recall com revisão</th></tr></thead>
+<tbody>
+
+<tr><td>data ausente</td><td class="n">99</td><td class="n">91,9%</td>
+<td class="n">91,9%</td></tr>
+
+<tr><td>mudou de município</td><td class="n">195</td><td class="n">93,3%</td>
+<td class="n">97,4%</td></tr>
+
+<tr><td>erro de digitação no nome</td><td class="n">464</td><td class="n">94,6%</td>
+<td class="n">97,8%</td></tr>
+
+<tr><td>nome da mãe ausente</td><td class="n">269</td><td class="n">94,8%</td>
+<td class="n">98,5%</td></tr>
+
+<tr><td>sobrenomes em outra ordem</td><td class="n">178</td><td class="n">94,4%</td>
+<td class="n">98,9%</td></tr>
+
+<tr><td>documento ausente</td><td class="n">736</td><td class="n">95,4%</td>
+<td class="n">99,5%</td></tr>
+
+<tr><td>acentos removidos</td><td class="n">1.099</td><td class="n">95,2%</td>
+<td class="n">99,6%</td></tr>
+
+<tr><td>partículas removidas</td><td class="n">207</td><td class="n">94,7%</td>
+<td class="n">100,0%</td></tr>
+
+<tr><td>erro de digitação no nome da mãe</td><td class="n">149</td><td class="n">96,0%</td>
+<td class="n">100,0%</td></tr>
+
+<tr><td>nome abreviado</td><td class="n">75</td><td class="n">98,7%</td>
+<td class="n">100,0%</td></tr>
+
+<tr><td>dia e mês trocados</td><td class="n">60</td><td class="n">95,0%</td>
+<td class="n">100,0%</td></tr>
+
+<tr><td>data aproximada (01/01)</td><td class="n">80</td><td class="n">5,0%</td>
+<td class="n">100,0%</td></tr>
+
+</tbody></table>
+</div>
+
+
+<h2>5. Deduplicação da base A</h2>
+<div class="card scroll">
+<table>
+<tbody>
+<tr><td>Duplicatas verdadeiras (gabarito)</td><td class="n">150</td></tr>
+<tr><td>Pares encontrados (pontuação ≥ 0,90)</td><td class="n">150</td></tr>
+<tr><td>Precisão</td><td class="n">100,0%</td></tr>
+<tr><td>Recall</td><td class="n">100,0%</td></tr>
+<tr><td>Completude da blocagem</td><td class="n">100,0%</td></tr>
+<tr><td>Redução de pares</td><td class="n">99,06%</td></tr>
+</tbody></table>
+</div>
+
+
+<h2>6. Casos difíceis</h2>
+<p>Selecionados automaticamente a partir dos resultados; os comentários usam os erros registrados
+no gabarito e as similaridades calculadas.</p>
+
+<div class="card case scroll">
+<h3>1. Falso positivo aceito automaticamente</h3>
+<div class="meta">A02065 × B02047 · pontuação 0,926</div>
+<table>
+<thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
+<tbody>
+
+<tr><td>nome_completo</td><td>Viviana López Rodríguez</td><td>VITÓRIA AYLA LÓPEZ RODRÍGUEZ</td></tr>
+
+<tr><td>nome_mae</td><td>Martha Vallejo López</td><td>MARTHA VALLEJO LÓPEZ</td></tr>
+
+<tr><td>data_nascimento</td><td>1960-03-29</td><td>29/03/1960</td></tr>
+
+<tr><td>sexo</td><td>F</td><td>FEMININO</td></tr>
+
+<tr><td>municipio</td><td>Chapecó</td><td>CHAPECÓ</td></tr>
+
+<tr><td>uf</td><td>SC</td><td>SC</td></tr>
+
+<tr><td>documento</td><td>296.113.354-82</td><td>(vazio)</td></tr>
+
+</tbody></table>
+<p style="margin-top: 10px">Pessoas diferentes com mesma mãe, mesma data de nascimento e mesmo município: o perfil de gêmeos. Só o primeiro nome difere (similaridade do nome 0.82). Nenhum limiar separa esse caso sem documento: é a razão para exigir documento ou revisão humana quando a mãe e a data coincidem e o primeiro nome não.</p>
+</div>
+
+<div class="card case scroll">
+<h3>2. Par verdadeiro na fila de revisão</h3>
+<div class="meta">A00952 × B02589 · pontuação 0,794</div>
+<table>
+<thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
+<tbody>
+
+<tr><td>nome_completo</td><td>Dante Fonseca Andrade</td><td>DANTE ANDRADE FONSECA</td></tr>
+
+<tr><td>nome_mae</td><td>Sophia dos Gonçalves Fonseca</td><td>SOPHIA DOS GONÇALVES FONSECA</td></tr>
+
+<tr><td>data_nascimento</td><td>1941-12-02</td><td>01/01/1941</td></tr>
+
+<tr><td>sexo</td><td>M</td><td>MASCULINO</td></tr>
+
+<tr><td>municipio</td><td>Goiânia</td><td>GOIÂNIA</td></tr>
+
+<tr><td>uf</td><td>GO</td><td>GO</td></tr>
+
+<tr><td>documento</td><td>(vazio)</td><td>36219376170</td></tr>
+
+</tbody></table>
+<p style="margin-top: 10px">Mesma pessoa com dia e mês trocados (nível de data: so_ano). Erros introduzidos: sobrenomes em outra ordem, dia e mês trocados, data aproximada (01/01). A pontuação cai para a faixa de revisão: o revisor confirma pelo nome da mãe e pelo município.</p>
+</div>
+
+<div class="card case scroll">
+<h3>3. Nome reordenado ou abreviado</h3>
+<div class="meta">A01856 × B01269 · pontuação 0,735</div>
+<table>
+<thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
+<tbody>
+
+<tr><td>nome_completo</td><td>Vitor Gabriel Alves Andrade</td><td>VITOR GABRIEL ANDRADE ALVES</td></tr>
+
+<tr><td>nome_mae</td><td>Eloá Ana Vieira Alves</td><td>ELOÁ ANA VIEIRA ALVES</td></tr>
+
+<tr><td>data_nascimento</td><td>2006-07-09</td><td>01/01/2006</td></tr>
+
+<tr><td>sexo</td><td>M</td><td>MASCULINO</td></tr>
+
+<tr><td>municipio</td><td>Recife</td><td>BOA VISTA</td></tr>
+
+<tr><td>uf</td><td>PE</td><td>RR</td></tr>
+
+<tr><td>documento</td><td>(vazio)</td><td>54729421876</td></tr>
+
+</tbody></table>
+<p style="margin-top: 10px">Erros introduzidos: sobrenomes em outra ordem, data aproximada (01/01), mudou de município. A comparação com tokens ordenados recupera parte da similaridade (nome 1.00). Resultado: enviado à revisão.</p>
+</div>
+
+<div class="card case scroll">
+<h3>4. Perdido na blocagem</h3>
+<div class="meta">A00227 × B02049 · pontuação 0,000</div>
+<table>
+<thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
+<tbody>
+
+<tr><td>nome_completo</td><td>Santiago Gómez da Sandoval</td><td>SATTIAGO GÓMEZ DA SANDOVAL</td></tr>
+
+<tr><td>nome_mae</td><td>Doris Sandoval Gómez</td><td>DORIS SANDOVAL GÓMEZ</td></tr>
+
+<tr><td>data_nascimento</td><td>1974-11-27</td><td>(vazio)</td></tr>
+
+<tr><td>sexo</td><td>M</td><td>MASCULINO</td></tr>
+
+<tr><td>municipio</td><td>São Paulo</td><td>SÃO PAULO</td></tr>
+
+<tr><td>uf</td><td>SP</td><td>SP</td></tr>
+
+<tr><td>documento</td><td>407.440.665-90</td><td>40744066590</td></tr>
+
+</tbody></table>
+<p style="margin-top: 10px">O par nunca foi comparado: nenhuma regra de blocagem coincidiu. Erros introduzidos: erro de digitação no nome, data ausente. Quando o primeiro nome tem erro de digitação e a data ou a UF mudam, as três chaves falham ao mesmo tempo. Uma regra extra (por exemplo, documento) recuperaria parte desses casos.</p>
+</div>
+
+<div class="card case scroll">
+<h3>5. Não match na fila de revisão</h3>
+<div class="meta">A04192 × B00688 · pontuação 0,839</div>
+<table>
+<thead><tr><th>Campo</th><th>Base A</th><th>Base B</th></tr></thead>
+<tbody>
+
+<tr><td>nome_completo</td><td>Joana Nascimento Martins</td><td>YAGO MARTINS NASCIMENTO</td></tr>
+
+<tr><td>nome_mae</td><td>Stella Lima Nascimento</td><td>STELLA LIMA NASCIMENTO</td></tr>
+
+<tr><td>data_nascimento</td><td>1987-07-22</td><td>22/07/1987</td></tr>
+
+<tr><td>sexo</td><td>F</td><td>MASCULINO</td></tr>
+
+<tr><td>municipio</td><td>Curitiba</td><td>CURITIBA</td></tr>
+
+<tr><td>uf</td><td>PR</td><td>PR</td></tr>
+
+<tr><td>documento</td><td>137.910.790-34</td><td>(vazio)</td></tr>
+
+</tbody></table>
+<p style="margin-top: 10px">Pessoas diferentes com pontuação 0.84: nome com similaridade 0.75 e data no nível &#39;igual&#39;; o nome da mãe é parecido (similaridade 1.00), o que sugere parentes. É o tipo de par que o revisor deve rejeitar, e o motivo de a faixa de revisão não ser aceita automaticamente.</p>
+</div>
+
+
+
+
+<footer>Gerado por <code>rlk evaluate</code> (record-linkage-kit). Métricas completas em
+<code>reports/metricas.json</code>.</footer>
+</main>
+<script>
+(function () {
+  var rows = [{"f1": 0.8122, "fn": 10, "fp": 818, "limiar": 0.5, "pares": 2608, "precisao": 0.6863, "recall": 0.9944, "vp": 1790}, {"f1": 0.8783, "fn": 10, "fp": 486, "limiar": 0.55, "pares": 2276, "precisao": 0.7865, "recall": 0.9944, "vp": 1790}, {"f1": 0.9516, "fn": 10, "fp": 172, "limiar": 0.6, "pares": 1962, "precisao": 0.9123, "recall": 0.9944, "vp": 1790}, {"f1": 0.9715, "fn": 10, "fp": 95, "limiar": 0.65, "pares": 1885, "precisao": 0.9496, "recall": 0.9944, "vp": 1790}, {"f1": 0.9744, "fn": 10, "fp": 84, "limiar": 0.7, "pares": 1874, "precisao": 0.9552, "recall": 0.9944, "vp": 1790}, {"f1": 0.9827, "fn": 13, "fp": 50, "limiar": 0.75, "pares": 1837, "precisao": 0.9728, "recall": 0.9928, "vp": 1787}, {"f1": 0.9757, "fn": 56, "fp": 31, "limiar": 0.8, "pares": 1775, "precisao": 0.9825, "recall": 0.9689, "vp": 1744}, {"f1": 0.9722, "fn": 86, "fp": 12, "limiar": 0.85, "pares": 1726, "precisao": 0.993, "recall": 0.9522, "vp": 1714}, {"f1": 0.9721, "fn": 94, "fp": 4, "limiar": 0.9, "pares": 1710, "precisao": 0.9977, "recall": 0.9478, "vp": 1706}, {"f1": 0.9241, "fn": 254, "fp": 0, "limiar": 0.95, "pares": 1546, "precisao": 1.0, "recall": 0.8589, "vp": 1546}];
+  var fmt = function (v) { return (v * 100).toFixed(1).replace(".", ",") + "%"; };
+  var wrap = document.getElementById("chart");
+  var tip = document.getElementById("tip");
+  var cross = document.getElementById("cross");
+  var svg = wrap.querySelector("svg");
+  wrap.querySelectorAll(".hit").forEach(function (el) {
+    el.addEventListener("mouseenter", function () {
+      var r = rows[+el.dataset.i];
+      var cx = +el.getAttribute("x") + +el.getAttribute("width") / 2;
+      cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("opacity", 1);
+      tip.innerHTML = "<b>Limiar " + r.limiar.toFixed(2).replace(".", ",") + "</b>" +
+        "<span>Precisão <strong>" + fmt(r.precisao) + "</strong></span>" +
+        "<span>Recall <strong>" + fmt(r.recall) + "</strong></span>" +
+        "<span>F1 <strong>" + fmt(r.f1) + "</strong></span>" +
+        "<span>Pares aceitos <strong>" + r.pares + "</strong></span>";
+      var scale = svg.getBoundingClientRect().width / 720;
+      var left = cx * scale + 12 - wrap.scrollLeft;
+      if (left + 170 > wrap.clientWidth) left = cx * scale - 182 - wrap.scrollLeft;
+      tip.style.left = left + "px"; tip.style.top = "24px"; tip.style.opacity = 1;
+    });
+    el.addEventListener("mouseleave", function () {
+      tip.style.opacity = 0; cross.setAttribute("opacity", 0);
+    });
+  });
+})();
+</script>
+</body>
+</html>

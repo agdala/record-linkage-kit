@@ -1,0 +1,51 @@
+name: relatorio
+
+# Publica reports/relatorio.html no GitHub Pages a cada push no main.
+# O relatório é gerado do zero no CI, a partir de dados SINTÉTICOS (semente fixa).
+# Requer Settings > Pages > Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar o projeto
+        run: pip install -e .
+      - name: Gerar, cruzar e avaliar (make run)
+        run: make run
+      - name: Montar o site
+        run: |
+          mkdir -p site
+          cp reports/relatorio.html site/index.html
+          cp reports/metricas.json site/metricas.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

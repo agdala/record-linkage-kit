@@ -24,3 +24,5 @@ jobs:
         run: pytest -v
       - name: make run (dados sintéticos, do zero)
         run: make run
+      - name: Conferir que as métricas versionadas são as reproduzidas (números do README)
+        run: git diff --exit-code -- reports/metricas.json reports/relatorio.html
