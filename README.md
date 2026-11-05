@@ -43,8 +43,8 @@ flowchart LR
     B --> C[Comparar<br/>Jaro-Winkler, níveis<br/>de data, igualdade]
     C --> S[Pontuar<br/>média ponderada<br/>de 0 a 1]
     S --> K{Classificar<br/>+ resolução 1:1}
-    K -->|≥ 0,85| M[matches.csv]
-    K -->|0,70 a 0,85| R[Revisar<br/>revisao_manual.csv]
+    K -->|≥ 0,90| M[matches.csv]
+    K -->|0,70 a 0,90| R[Revisar<br/>revisao_manual.csv]
     K -->|< 0,70| N[nao_pareados.csv]
     R -->|decisão humana| M
     M --> E[Avaliar<br/>contra o gabarito<br/>relatorio.html]
@@ -152,7 +152,8 @@ Python 3.10 e 3.12 a cada push.
 ## 4. Resultados
 
 Bases: A com 5.000 registros (150 duplicatas internas), B com 3.000 registros, dos quais **1.800**
-têm par em A. Limiares: match automático a partir de **0,85**, revisão manual de **0,70 a 0,85**.
+têm par em A. Limiares: match automático a partir de **0,90**, revisão manual de **0,70 a 0,90**
+(a escolha está na seção 4.3).
 
 ### 4.1 Cruzamento A × B
 
@@ -161,13 +162,13 @@ têm par em A. Limiares: match automático a partir de **0,85**, revisão manual
 | Pares possíveis sem blocagem | 15.000.000 |
 | Pares candidatos após a blocagem | 138.897 (**redução de 99,07%**) |
 | Completude da blocagem (pares verdadeiros entre os candidatos) | **99,4%** |
-| Matches automáticos (≥ 0,85) | 1.726, com 12 falsos positivos |
-| **Precisão automática** | **99,3%** |
-| **Recall automático** | **95,2%** |
+| Matches automáticos (≥ 0,90) | 1.710, com 4 falsos positivos |
+| **Precisão automática** | **99,8%** |
+| **Recall automático** | **94,8%** |
 | F1 automático | 97,2% |
-| Fila de revisão manual (0,70 a 0,85) | **148 pares** (4,9% da base B), 76 deles verdadeiros (51%) |
+| Fila de revisão manual (0,70 a 0,90) | **164 pares** (5,5% da base B), 84 deles verdadeiros (51%) |
 | **Recall após a revisão** (revisão correta) | **99,4%** |
-| Precisão após a revisão (revisão correta) | 99,3% |
+| Precisão após a revisão (revisão correta) | 99,8% |
 
 ### 4.2 Troca entre precisão e recall
 
@@ -177,15 +178,50 @@ têm par em A. Limiares: match automático a partir de **0,85**, revisão manual
 | 0,70 | 1.874 | 84 | 95,5% | 99,4% | 97,4% |
 | 0,75 | 1.837 | 50 | 97,3% | 99,3% | 98,3% |
 | 0,80 | 1.775 | 31 | 98,3% | 96,9% | 97,6% |
-| **0,85** | **1.726** | **12** | **99,3%** | **95,2%** | **97,2%** |
-| 0,90 | 1.710 | 4 | 99,8% | 94,8% | 97,2% |
+| 0,85 | 1.726 | 12 | 99,3% | 95,2% | 97,2% |
+| **0,90** | **1.710** | **4** | **99,8%** | **94,8%** | **97,2%** |
 | 0,95 | 1.546 | 0 | 100,0% | 85,9% | 92,4% |
 
-O melhor F1 isolado está em 0,75, mas com 50 falsos positivos. Em cadastros de pessoas, um falso
-positivo funde duas pessoas, por isso o limiar automático fica em 0,85 e a faixa intermediária
-vai para revisão humana.
+O melhor F1 isolado está em 0,75, mas com 50 falsos positivos. O F1 trata os dois erros como
+equivalentes, o que não vale para cadastros de pessoas (seção 4.3).
 
-### 4.3 Blocagem por regra
+### 4.3 Escolha do limiar
+
+**Os dois erros não custam o mesmo.** Um falso positivo funde duas pessoas diferentes: uma delas
+pode ter a assistência negada por "já estar atendida", ou os históricos de proteção se misturam.
+O erro é silencioso e difícil de desfazer depois que as decisões foram tomadas sobre o registro
+fundido. Um falso negativo vai para a fila de revisão ou, no pior caso, gera um cadastro duplicado,
+que aparece numa deduplicação posterior e é mais fácil de corrigir. Por isso o limiar automático
+deve priorizar a precisão, e o recall perdido deve ser recuperado pela revisão humana, não pelo modelo.
+
+Cenários com o limiar de revisão fixo em 0,70 (`cenarios_limiar` em
+[`reports/metricas.json`](reports/metricas.json)):
+
+| Limiar de match | Falsos positivos automáticos | Dos quais com perfil de gêmeos | Recall automático | Fila de revisão |
+|---|---|---|---|---|
+| 0,85 | 12 | 9 | 95,2% | 148 pares |
+| **0,90 (adotado)** | **4** | **4** | **94,8%** | **164 pares** |
+| 0,95 | 0 | 0 | 85,9% | 328 pares |
+
+"Perfil de gêmeos": mesma mãe e mesma data de nascimento, sem documento para desempatar. Em
+qualquer cenário, o recall após a revisão é de 99,4%, porque o limiar de revisão não muda.
+
+**Por que 0,90:**
+
+- passar de 0,85 para 0,90 elimina **8 dos 12 falsos positivos** (67%) em troca de **16 pares a
+  mais** na fila (+11%) e de 0,4 ponto de recall automático. São 2 revisões a mais para cada fusão
+  indevida evitada;
+- os 4 falsos positivos que restam são todos gêmeos sem documento, um padrão que a pontuação não
+  separa. A resposta para eles é uma regra de negócio (mesma mãe + mesma data + primeiro nome
+  diferente vai sempre para revisão), não um limiar mais alto;
+- 0,95 zera os falsos positivos, mas **dobra a fila** (328 pares, 164 a mais que em 0,90) para
+  evitar os 4 erros restantes: 41 revisões a mais por fusão evitada, e o recall automático cai
+  para 85,9%.
+  Só se justifica se a equipe de revisão tiver essa capacidade.
+
+O limiar deve ser recalibrado numa amostra rotulada de dados reais antes de qualquer uso (seção 8).
+
+### 4.4 Blocagem por regra
 
 | Regra (chaves) | Pares | Completude sozinha |
 |---|---|---|
@@ -196,21 +232,21 @@ vai para revisão humana.
 
 Nenhuma regra isolada passa de 93%; a união chega a 99,4%.
 
-### 4.4 Deduplicação, pseudonimização e casos difíceis
+### 4.5 Deduplicação, pseudonimização e casos difíceis
 
 | Indicador | Resultado |
 |---|---|
 | Deduplicação da base A (limiar 0,90) | 150 de 150 duplicatas, precisão e recall de 100% |
 | Modo pseudonimizado (hashes, cascata de 4 chaves) | 1.504 pares, **precisão 100%, recall 83,6%** |
 
-O modo pseudonimizado perde 11,7 pontos de recall em relação ao automático aproximado (95,2%) e
+O modo pseudonimizado perde 11,2 pontos de recall em relação ao automático aproximado (94,8%) e
 15,9 pontos em relação ao resultado com revisão (99,4%). Esse é o custo de não trocar nomes em claro.
 
 O [relatório](https://agdala.github.io/record-linkage-kit/) traz ainda o recall por tipo de erro e
 **cinco casos difíceis comentados**. Os mais instrutivos:
 
 - os falsos positivos com pontuação alta são **gêmeos**: mesma mãe, mesma data, mesmo município,
-  só o primeiro nome muda. Nenhum limiar os separa sem documento;
+  só o primeiro nome muda. Sem documento, só um limiar de 0,95 os elimina, ao custo de dobrar a fila;
 - datas registradas como **01/01** (só o ano conhecido) têm recall automático de apenas 5%, mas
   100% depois da revisão: a pontuação cai para a faixa de revisão, como deveria;
 - registros **sem data de nascimento** ficam com 91,9% de recall mesmo com revisão: duas das três
@@ -288,7 +324,7 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 |---|---|
 | Ataque de dicionário | Quem tem o sal (inclusive a outra parte) pode testar listas de nomes e datas. O hash é **pseudonimização, não anonimização**: a LGPD continua valendo. |
 | Acordo de compartilhamento | Esconder os nomes não dispensa base legal, acordo, proibição de reidentificação e destruição do sal. |
-| Perda do pareamento aproximado | Um erro de digitação muda o hash. Recall de 83,6%, contra 95,2% (aproximado) e 99,4% (com revisão). |
+| Perda do pareamento aproximado | Um erro de digitação muda o hash. Recall de 83,6%, contra 94,8% (aproximado) e 99,4% (com revisão). |
 
 ## 7. Decisões técnicas
 
@@ -362,8 +398,8 @@ The pipeline is a small, hand-written Python implementation (pandas, rapidfuzz):
 with a 21-rule Portuguese phonetic key, configurable blocking (union of rules, 99.07% pair
 reduction, 99.4% pair completeness), Jaro-Winkler and level-based comparisons, a weighted score
 from 0 to 1 that ignores missing fields, two thresholds (auto-match and manual review) and greedy
-1:1 resolution. Against the ground truth, auto-matches reach **99.3% precision and 95.2% recall**
-at 0.85; a review queue of 148 pairs (4.9% of list B) lifts recall to **99.4%**. A pseudonymized
+1:1 resolution. Against the ground truth, auto-matches reach **99.8% precision and 94.8% recall**
+at 0.90; a review queue of 164 pairs (5.5% of list B) lifts recall to **99.4%**. A pseudonymized
 mode (salted SHA-256 via HMAC, salt kept in an environment variable) links without exchanging
 names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
 The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
