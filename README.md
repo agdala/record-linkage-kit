@@ -122,7 +122,7 @@ make run
 ```
 
 `make run` executa `rlk generate`, `rlk link`, `rlk pseudo` (com um sal efêmero, se `RLK_SALT` não
-estiver definido), `rlk evaluate` e `rlk ml`. Leva cerca de 20 segundos.
+estiver definido), `rlk evaluate` e `rlk ml`. Leva cerca de 1 minuto (o `rlk ml` repete a comparação em 5 divisões).
 
 ### 3.3 Comandos
 
@@ -268,43 +268,46 @@ O [relatório](https://agdala.github.io/record-linkage-kit/) traz ainda o recall
 Os pesos da pontuação ponderada (seção 5.2) foram escolhidos à mão. O comando `rlk ml` mede se
 modelos que aprendem os pesos a partir de pares rotulados fazem melhor nas mesmas condições
 (método na seção 5.4). Cada modelo precisa manter, no mínimo, a precisão automática que a
-pontuação ponderada tem na metade de treino (99,9%), com uma fila de revisão do mesmo tamanho
-(99 pares no treino, a mesma capacidade de revisão). Os números abaixo são da metade de teste,
-que nenhum modelo viu: 868 registros de B com par e 68.610 pares candidatos
-([`reports/ml_metricas.json`](reports/ml_metricas.json)).
+pontuação ponderada tem na metade de treino, com uma fila de revisão do mesmo tamanho (a mesma
+capacidade de revisão). Os resultados são medidos na metade de teste, que nenhum modelo viu.
 
-| Método | Falsos positivos automáticos | Precisão | Recall automático | Fila de revisão | Recall após revisão |
-|---|---|---|---|---|---|
-| Pontuação ponderada (limiares 0,90 e 0,70) | 5, todos gêmeos | 99,4% | 95,3% | 81 pares | 99,5% |
-| **Regressão logística** | **1** | **99,9%** | 94,8% | 66 pares | 99,5% |
-| Regressão logística sem o primeiro nome | 2 | 99,7% | 88,7% | 97 pares | 98,8% |
-| Gradient boosting | 0 | 100,0% | 99,4% | 7 pares | 99,5% |
+Uma divisão só tem cerca de 870 pessoas com par no teste, e nela um ou dois falsos positivos de
+diferença podem ser acaso. Por isso a comparação é repetida em **5 divisões diferentes**
+(sementes 42, 7, 123, 2026 e 99), somando **4.476 pessoas com par**
+([`reports/ml_metricas.json`](reports/ml_metricas.json), `todas_as_sementes`):
 
-O recall após revisão de 99,5% é o teto da blocagem nesta metade: os pares que faltam nunca
-chegaram a ser comparados.
+| Método | Falsos positivos automáticos (por divisão) | Total | Fila de revisão (total) | Pessoas encontradas após revisão |
+|---|---|---|---|---|
+| Pontuação ponderada (limiares 0,90 e 0,70) | 5, 3, 3, 1, 2 | 14 | 429 pares | 4.447 (99,4%) |
+| **Regressão logística** | 1, 1, 4, 2, 0 | **8** | **383 pares** | 4.446 (99,3%) |
+| Regressão logística sem o primeiro nome | 3, 2, 3, 1, 1 | 10 | 378 pares | 4.363 (97,5%) |
+| Gradient boosting | 1, 1, 3, 5, 2 | 12 | 11 pares | 4.447 (99,4%) |
 
 **O que os números mostram:**
 
-- **A regressão logística evita 4 fusões indevidas com uma fila menor.** Os falsos positivos
-  caem de 5 para 1, a fila cai de 81 para 66 pares e o recall após revisão fica igual. O recall
-  automático cai 0,5 ponto: alguns pares verdadeiros saem do automático e vão para a revisão, o que
-  a seção 4.3 considera aceitável (fundir duas pessoas custa mais que revisar um par).
-- **Boa parte do ganho vem de uma variável nova, a similaridade do primeiro nome.** A pontuação
-  ponderada só compara o nome completo, e nele um primeiro nome diferente fica diluído nos
-  sobrenomes iguais. É o padrão dos gêmeos da seção 4.3. Sem essa variável, a regressão logística
-  perde 6 pontos de recall automático e, com a mesma capacidade de revisão, deixa de achar 6
-  pessoas (98,8% contra 99,5%).
-- **Os pesos aprendidos podem ser lidos.** Os maiores coeficientes da regressão logística são o
-  nome completo (7,5), o nome da mãe (5,1), o primeiro nome (4,9), o documento (4,5) e a data
-  diferente (-4,4). Dá para explicar a quem revisa a fila por que um par foi aceito.
-- **O gradient boosting acerta quase tudo, e esse número merece desconfiança.** Nenhum falso
-  positivo e uma fila de só 7 pares parecem bons demais. O gerador sintético cria erros com regras
-  fixas, e um modelo flexível aprende essas regras. Em dados reais o desempenho tende a ser pior
-  (seção 8), e o modelo é mais difícil de explicar a quem revisa.
+- **A regressão logística erra menos com uma fila menor, mas não em todas as divisões.** No total,
+  as fusões indevidas caem de 14 para 8 e a fila cai 11% (de 429 para 383 pares), encontrando
+  praticamente as mesmas pessoas (1 a menos em 4.476). Numa das cinco divisões, porém, ela errou
+  mais que a pontuação ponderada (4 contra 3). O ganho é real, mas modesto.
+- **A similaridade do primeiro nome é o que mantém o recall.** A pontuação ponderada só compara o
+  nome completo, e nele um primeiro nome diferente fica diluído nos sobrenomes iguais (o padrão dos
+  gêmeos da seção 4.3). Sem essa variável, a regressão logística deixa de encontrar 84 pessoas com
+  a mesma capacidade de revisão.
+- **Os pesos aprendidos podem ser lidos.** Na divisão 42, os maiores coeficientes da regressão
+  logística são o nome completo (7,5), o nome da mãe (5,1), o primeiro nome (4,9), o documento
+  (4,5) e a data diferente (-4,4). Dá para explicar a quem revisa a fila por que um par foi aceito.
+- **O gradient boosting quase não usa a revisão, e isso merece desconfiança.** Ele encontra as
+  mesmas pessoas com uma fila de 11 pares no total, porque dá probabilidade perto de 0 ou de 1 a
+  quase todos os pares. Ainda assim aceita 12 pessoas fundidas, quase tanto quanto a pontuação
+  ponderada. Um modelo tão seguro de si em dados sintéticos provavelmente aprendeu as regras do
+  gerador (seção 8), e em dados reais deixaria a revisão humana sem os casos duvidosos.
 
-Para uso real, a escolha seria a regressão logística: melhora clara sobre os pesos manuais, pesos
-que dá para auditar e um modelo simples de explicar. O gradient boosting só deveria ser adotado
-se repetisse o resultado numa amostra real rotulada por revisores.
+Na divisão 42, detalhada no JSON, a pontuação ponderada aceita 5 pares errados (todos gêmeos) e a
+regressão logística aceita 1, com fila de 81 e 72 pares.
+
+Para uso real, a escolha seria a regressão logística: menos fusões indevidas no total, pesos que
+dá para auditar e um modelo simples de explicar. Antes de adotá-la, o resultado precisaria se
+repetir numa amostra real rotulada por revisores.
 
 ## 5. Como funciona
 
@@ -368,6 +371,7 @@ blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto 
 
 - **Divisão treino e teste:** os registros de B são divididos ao meio por um hash do id com
   semente fixa. Cada pessoa aparece uma vez em B, então nenhuma pessoa tem pares nos dois lados.
+  A comparação é repetida com 5 sementes (`ml.sementes` no YAML).
 - **Variáveis:** as mesmas similaridades da pontuação ponderada, uma marcação de campo ausente
   para cada uma (ausente não é o mesmo que diferente), o nível da data em colunas 0 ou 1 e a
   similaridade Jaro-Winkler do primeiro nome. O rótulo de cada par candidato vem do gabarito.
@@ -375,13 +379,15 @@ blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto 
   como controle, a mesma regressão logística sem o primeiro nome, para separar o efeito da
   variável nova do efeito de aprender os pesos.
 - **Limiares:** escolhidos só no treino, sobre probabilidades de validação cruzada em 5 partes,
-  agrupadas por registro de B. O limiar de match é a menor probabilidade que mantém a precisão da
+  agrupadas por registro de B (as partes também saem de um hash do id). O limiar de match é a menor probabilidade que mantém a precisão da
   pontuação ponderada no treino; o de revisão deixa na fila o mesmo número de pares que ela deixa
   no treino. Depois disso o modelo é treinado com todo o treino e aplicado uma única vez ao teste,
   com a mesma resolução 1:1 do fluxo principal.
 - **Reprodutibilidade:** a regressão logística é resolvida com tolerância apertada (o ótimo é
-  único), o gradient boosting roda um número fixo de árvores e as probabilidades são arredondadas
-  para 4 casas, como a pontuação ponderada. Assim o resultado não muda de uma máquina para outra.
+  único), o gradient boosting roda um número fixo de árvores, as partes da validação cruzada saem
+  de um hash (o `GroupKFold` do scikit-learn usa uma ordenação instável, que muda conforme o
+  processador) e as probabilidades são arredondadas para 4 casas, como a pontuação ponderada.
+  Assim o resultado não muda de uma máquina para outra.
 
 ## 6. Proteção de dados
 
@@ -443,9 +449,8 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 - **O classificador aprende com rótulos perfeitos.** Os rótulos vêm do gabarito. Num uso real,
   viriam das decisões da fila de revisão (`decisao_revisor`), que têm erros e cobrem só os pares
   duvidosos. As probabilidades também não foram calibradas: servem para ordenar os pares, não como
-  chance real de serem a mesma pessoa. Com cerca de 900 pares verdadeiros em cada metade, um ou
-  dois falsos positivos de diferença entre métodos estão dentro da margem de acaso; a diferença
-  entre 5 e 1 já é mais consistente, mas pede confirmação com outras sementes.
+  chance real de serem a mesma pessoa. Mesmo somando 5 divisões, a diferença entre 14 e 8
+  falsos positivos ainda é pequena para uma conclusão firme.
 - **Deduplicação fácil demais.** As duplicatas internas de A têm só 1 ou 2 erros leves, por isso
   100% de precisão e recall. Duplicatas reais tendem a ser mais difíceis.
 - **Resolução 1:1 gulosa** não é ótima globalmente e não forma grupos (clusters) com mais de dois
@@ -467,8 +472,8 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
    Cuidado: a regra também desvia para a fila pares verdadeiros cujo primeiro nome tem erro de
    digitação ou abreviação. O custo na fila precisa ser medido e publicado em `metricas.json`
    antes de adotá-la, e o critério pode exigir similaridade baixa do primeiro nome, não só diferença.
-   O classificador da seção 4.6 mostra que a similaridade do primeiro nome resolve a maior parte
-   desses casos.
+   O classificador da seção 4.6 mostra que a similaridade do primeiro nome ajuda nesses casos,
+   mas não elimina todos.
 2. **Comparar com o Splink** nas mesmas bases e com o mesmo gabarito.
 3. **Fellegi-Sunter com EM:** estimar as probabilidades m e u e os pesos de cada nível de
    comparação a partir dos dados, em vez de pesos fixos.
@@ -512,8 +517,9 @@ at 0.90; a review queue of 164 pairs (5.5% of list B) lifts recall to **99.4%**.
 mode (salted SHA-256 via HMAC, salt kept in an environment variable) links without exchanging
 names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
 A supervised comparison (`rlk ml`, scikit-learn) trains logistic regression and gradient boosting
-on half of list B and tests on the other half: logistic regression cuts automatic false positives
-from 5 to 1 with a smaller review queue, largely thanks to a first-name similarity feature.
+on half of list B and tests on the other half. Over five splits, logistic regression cuts
+automatic false positives from 14 to 8 with an 11% smaller review queue; a first-name similarity
+feature is what keeps its recall.
 The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
 checks that the published metrics are reproduced.
 

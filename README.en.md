@@ -127,7 +127,7 @@ make run
 ```
 
 `make run` runs `rlk generate`, `rlk link`, `rlk pseudo` (with an ephemeral salt, if `RLK_SALT` is
-not set), `rlk evaluate` and `rlk ml`. It takes about 20 seconds.
+not set), `rlk evaluate` and `rlk ml`. It takes about 1 minute (`rlk ml` repeats the comparison on 5 splits).
 
 ### 3.3 Commands
 
@@ -275,43 +275,46 @@ The [report](https://agdala.github.io/record-linkage-kit/) also shows recall by 
 The weights of the weighted score (section 5.2) were chosen by hand. `rlk ml` measures whether
 models that learn the weights from labelled pairs do better under the same conditions (method in
 section 5.4). Each model must keep at least the automatic precision that the weighted score
-reaches on the training half (99.9%), with a review queue of the same size (99 pairs on the
-training half, the same reviewing capacity). The numbers below come from the test half, which
-no model saw: 868 B records with a pair and 68,610 candidate pairs
-([`reports/ml_metricas.json`](reports/ml_metricas.json)).
+reaches on the training half, with a review queue of the same size (the same reviewing
+capacity). Results are measured on the test half, which no model saw.
 
-| Method | Automatic false positives | Precision | Automatic recall | Review queue | Recall after review |
-|---|---|---|---|---|---|
-| Weighted score (thresholds 0.90 and 0.70) | 5, all twins | 99.4% | 95.3% | 81 pairs | 99.5% |
-| **Logistic regression** | **1** | **99.9%** | 94.8% | 66 pairs | 99.5% |
-| Logistic regression without the first name | 2 | 99.7% | 88.7% | 97 pairs | 98.8% |
-| Gradient boosting | 0 | 100.0% | 99.4% | 7 pairs | 99.5% |
+A single split has only about 870 people with a pair in the test half, where a difference of one
+or two false positives can be chance. That is why the comparison is repeated on **5 different
+splits** (seeds 42, 7, 123, 2026 and 99), adding up to **4,476 people with a pair**
+([`reports/ml_metricas.json`](reports/ml_metricas.json), `todas_as_sementes`):
 
-The 99.5% recall after review is the blocking ceiling on this half: the missing pairs were never
-compared.
+| Method | Automatic false positives (per split) | Total | Review queue (total) | People found after review |
+|---|---|---|---|---|
+| Weighted score (thresholds 0.90 and 0.70) | 5, 3, 3, 1, 2 | 14 | 429 pairs | 4,447 (99.4%) |
+| **Logistic regression** | 1, 1, 4, 2, 0 | **8** | **383 pairs** | 4,446 (99.3%) |
+| Logistic regression without the first name | 3, 2, 3, 1, 1 | 10 | 378 pairs | 4,363 (97.5%) |
+| Gradient boosting | 1, 1, 3, 5, 2 | 12 | 11 pairs | 4,447 (99.4%) |
 
 **What the numbers show:**
 
-- **Logistic regression avoids 4 wrong merges with a smaller queue.** False positives drop from 5
-  to 1, the queue drops from 81 to 66 pairs and recall after review stays the same. Automatic
-  recall drops 0.5 points: some true pairs move from automatic matching to review, which section
-  4.3 considers acceptable (merging two people costs more than reviewing a pair).
-- **Much of the gain comes from one new feature, the first-name similarity.** The weighted score
-  only compares the full name, where a different first name is diluted by the shared surnames.
-  That is the twin pattern from section 4.3. Without this feature, logistic regression loses 6
-  points of automatic recall and, with the same reviewing capacity, misses 6 more people (98.8%
-  against 99.5%).
-- **The learned weights can be read.** The largest logistic regression coefficients are the full
-  name (7.5), the mother's name (5.1), the first name (4.9), the document (4.5) and a different
-  date (-4.4). A reviewer can be told why a pair was accepted.
-- **Gradient boosting gets almost everything right, and that number deserves suspicion.** No false
-  positives and a queue of only 7 pairs look too good. The synthetic generator creates errors with
-  fixed rules, and a flexible model learns those rules. On real data, performance tends to be
-  lower (section 8), and the model is harder to explain to a reviewer.
+- **Logistic regression makes fewer mistakes with a smaller queue, but not on every split.** In
+  total, wrong merges drop from 14 to 8 and the queue shrinks 11% (from 429 to 383 pairs), finding
+  practically the same people (1 fewer out of 4,476). On one of the five splits, however, it made
+  more mistakes than the weighted score (4 against 3). The gain is real but modest.
+- **The first-name similarity is what keeps recall.** The weighted score only compares the full
+  name, where a different first name is diluted by the shared surnames (the twin pattern from
+  section 4.3). Without this feature, logistic regression misses 84 people with the same
+  reviewing capacity.
+- **The learned weights can be read.** On split 42, the largest logistic regression coefficients
+  are the full name (7.5), the mother's name (5.1), the first name (4.9), the document (4.5) and a
+  different date (-4.4). A reviewer can be told why a pair was accepted.
+- **Gradient boosting barely uses review, and that deserves suspicion.** It finds the same people
+  with a queue of 11 pairs in total, because it gives almost every pair a probability close to 0
+  or 1. Even so, it accepts 12 wrong merges, almost as many as the weighted score. A model this
+  sure of itself on synthetic data has probably learned the generator's rules (section 8), and on
+  real data it would leave human review without the doubtful cases.
 
-For real use, the choice would be logistic regression: a clear improvement over the hand-set
-weights, weights that can be audited and a model that is simple to explain. Gradient boosting
-should only be adopted if it repeated the result on a real sample labelled by reviewers.
+On split 42, detailed in the JSON, the weighted score accepts 5 wrong pairs (all twins) and
+logistic regression accepts 1, with queues of 81 and 72 pairs.
+
+For real use, the choice would be logistic regression: fewer wrong merges in total, weights that
+can be audited and a model that is simple to explain. Before adopting it, the result would have to
+be repeated on a real sample labelled by reviewers.
 
 ## 5. How it works
 
@@ -374,7 +377,8 @@ the true pairs that were actually compared; it is the upper bound of recall.
 ### 5.4 Supervised classifier ([`ml.py`](src/rlk/ml.py))
 
 - **Train and test split:** B records are split in half by a seeded hash of the id. Each person
-  appears once in B, so no person has pairs on both sides.
+  appears once in B, so no person has pairs on both sides. The comparison is repeated with 5
+  seeds (`ml.sementes` in the YAML).
 - **Features:** the same similarities as the weighted score, a missing flag for each one (missing
   is not the same as different), the date level as 0/1 columns and the Jaro-Winkler similarity of
   the first name. Each candidate pair is labelled from the ground truth.
@@ -382,13 +386,15 @@ the true pairs that were actually compared; it is the upper bound of recall.
   as a control, the same logistic regression without the first name, to separate the effect of the
   new feature from the effect of learning the weights.
 - **Thresholds:** chosen on the training half only, over 5-fold cross-validated probabilities
-  grouped by B record. The match threshold is the lowest probability that keeps the weighted
+  grouped by B record (the folds also come from a hash of the id). The match threshold is the lowest probability that keeps the weighted
   score's training precision; the review threshold leaves in the queue the same number of pairs
   the weighted score leaves on the training half. The model is then trained on the whole training
   half and applied once to the test half, with the same 1:1 resolution as the main pipeline.
 - **Reproducibility:** logistic regression is solved to a tight tolerance (its optimum is unique),
-  gradient boosting runs a fixed number of trees and the probabilities are rounded to 4 decimals,
-  like the weighted score. The result does not change from one machine to another.
+  gradient boosting runs a fixed number of trees, the cross-validation folds come from a hash
+  (scikit-learn's `GroupKFold` uses an unstable sort that changes with the processor) and the
+  probabilities are rounded to 4 decimals, like the weighted score. The result does not change
+  from one machine to another.
 
 ## 6. Data protection
 
@@ -450,9 +456,8 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
 - **The classifier learns from perfect labels.** The labels come from the ground truth. In real
   use they would come from the review queue decisions (`decisao_revisor`), which contain errors and
   only cover doubtful pairs. The probabilities were not calibrated either: they rank pairs, they
-  are not the actual chance of being the same person. With about 900 true pairs in each half, a
-  difference of one or two false positives between methods is within chance; the gap between 5 and
-  1 is more consistent, but should be confirmed with other seeds.
+  are not the actual chance of being the same person. Even over 5 splits, the gap between 14 and 8
+  false positives is still small for a firm conclusion.
 - **Deduplication is too easy.** The internal duplicates of A have only 1 or 2 light errors, hence
   100% precision and recall. Real duplicates tend to be harder.
 - **Greedy 1:1 resolution** is not globally optimal and does not form clusters with more than two
@@ -473,7 +478,8 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
    Caveat: the rule also diverts to the queue true pairs whose first name has a typo or an
    abbreviation. The cost to the queue must be measured and published in `metricas.json` before
    adopting it, and the criterion may require low first-name similarity, not just a difference.
-   The classifier in section 4.6 shows that first-name similarity solves most of these cases.
+   The classifier in section 4.6 shows that first-name similarity helps with these cases, but
+   does not remove all of them.
 2. **Compare with Splink** on the same bases and with the same ground truth.
 3. **Fellegi-Sunter with EM:** estimate the m and u probabilities and the weights of each
    comparison level from the data, instead of fixed weights.

@@ -22,7 +22,6 @@ from rapidfuzz.distance import JaroWinkler
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
-from sklearn.model_selection import GroupKFold
 
 from rlk.link import resolve_one_to_one
 from rlk.standardize import read_registry, standardize_frame
@@ -74,12 +73,25 @@ def build_features(pairs: pd.DataFrame) -> pd.DataFrame:
     return x
 
 
+def _bucket(value: str, seed: int) -> float:
+    """Position of an id in [0, 1], from a seeded hash: the same on any machine."""
+    digest = hashlib.sha256(f"{seed}:{value}".encode()).hexdigest()
+    return int(digest[:8], 16) / 0xFFFFFFFF
+
+
 def in_test(ids: pd.Series, fraction: float, seed: int) -> pd.Series:
     """Deterministic split by id: the same id always falls on the same side for a given seed."""
-    def bucket(value: str) -> float:
-        digest = hashlib.sha256(f"{seed}:{value}".encode()).hexdigest()
-        return int(digest[:8], 16) / 0xFFFFFFFF
-    return ids.map(lambda v: bucket(v) < fraction)
+    return ids.map(lambda v: _bucket(v, seed) < fraction)
+
+
+def fold_of(ids: pd.Series, folds: int, seed: int) -> np.ndarray:
+    """Cross-validation fold of each id, also from the hash (with another seed than the split).
+
+    scikit-learn's GroupKFold orders groups with an unstable sort, and numpy picks the sort
+    implementation by CPU, so groups of equal size could land in different folds on different
+    machines and change the published metrics.
+    """
+    return ids.map(lambda v: min(int(_bucket(v, seed + 1) * folds), folds - 1)).to_numpy()
 
 
 def make_model(kind: str, seed: int):
@@ -102,7 +114,9 @@ def out_of_fold(kind: str, x: pd.DataFrame, y: np.ndarray, groups: pd.Series, fo
     probabilities are not tuned on pairs the model was fitted on.
     """
     prob = np.zeros(len(x))
-    for fit_idx, pred_idx in GroupKFold(n_splits=folds).split(x, y, groups):
+    fold = fold_of(groups.reset_index(drop=True), folds, seed)
+    for k in range(folds):
+        fit_idx, pred_idx = np.where(fold != k)[0], np.where(fold == k)[0]
         model = make_model(kind, seed).fit(x.iloc[fit_idx], y[fit_idx])
         prob[pred_idx] = model.predict_proba(x.iloc[pred_idx])[:, 1]
     return np.round(prob, DECIMALS)
@@ -168,26 +182,12 @@ def operating_point(assigned: pd.DataFrame, truth: set, n_true: int, thr: dict) 
 
 
 # --------------------------------------------------------------------- pipeline
-def run_ml(cfg: dict, root: str | Path = ".") -> dict:
-    root = Path(root)
-    out_dir = root / cfg["saida"]
-    ml_cfg = {**DEFAULTS, **cfg.get("ml", {})}
-    seed, folds = int(ml_cfg["semente"]), int(ml_cfg["folds"])
-    drop = cfg.get("padronizacao", {}).get("remover_particulas", True)
-
-    scored = pd.read_csv(out_dir / "candidatos.csv", dtype={"id_1": str, "id_2": str})
-    std_a = standardize_frame(read_registry(root / cfg["entrada"]["base_a"]), drop)
-    std_b = standardize_frame(read_registry(root / cfg["entrada"]["base_b"]), drop)
-    gab = read_registry(root / cfg["entrada"]["gabarito"])
-    gab = gab[gab["tipo"] == "link"]
-    truth = set(zip(gab["id_1"], gab["id_2"], strict=True))
-
-    scored["sim_primeiro_nome"] = first_name_similarity(scored, std_a, std_b)
-    x = build_features(scored)
-    y = np.array([(a, b) in truth for a, b in zip(scored["id_1"], scored["id_2"], strict=True)],
-                 dtype=int)
-    test = in_test(scored["id_2"], float(ml_cfg["fracao_teste"]), seed).to_numpy()
-    b_test = set(std_b["id"][in_test(std_b["id"], float(ml_cfg["fracao_teste"]), seed)])
+def evaluate_seed(scored: pd.DataFrame, x: pd.DataFrame, y: np.ndarray, std_b: pd.DataFrame,
+                  gab: pd.DataFrame, truth: set, cfg: dict, seed: int, fraction: float,
+                  folds: int) -> dict:
+    """One train/test split: thresholds chosen on the training half, metrics on the test half."""
+    test = in_test(scored["id_2"], fraction, seed).to_numpy()
+    b_test = set(std_b["id"][in_test(std_b["id"], fraction, seed)])
     n_true = {"treino": int(gab.loc[~gab["id_2"].isin(b_test), "id_2"].nunique()),
               "teste": int(gab.loc[gab["id_2"].isin(b_test), "id_2"].nunique())}
     tr, te = scored[~test].reset_index(drop=True), scored[test].reset_index(drop=True)
@@ -222,21 +222,70 @@ def run_ml(cfg: dict, root: str | Path = ".") -> dict:
         if name == "regressao_logistica":
             coefficients = dict(sorted(zip(cols, model.coef_[0].tolist(), strict=True),
                                        key=lambda kv: -abs(kv[1])))
+    split = {
+        "semente": seed,
+        "pares_treino": int(len(tr)), "pares_teste": int(len(te)),
+        "positivos_treino": int(y_tr.sum()), "positivos_teste": int(y_te.sum()),
+        "registros_b_com_par_treino": n_true["treino"],
+        "registros_b_com_par_teste": n_true["teste"],
+    }
+    return {"divisao": split, "metas_do_treino": targets, "resultados_teste": results,
+            "coeficientes_regressao_logistica": coefficients}
 
+
+def summarize_seeds(runs: list[dict]) -> dict:
+    """Totals over every split: one split is too small to tell 1 false positive from 3."""
+    out = {}
+    for name in runs[0]["resultados_teste"]:
+        tests = [r["resultados_teste"][name]["teste"] for r in runs]
+        n_true = sum(r["divisao"]["registros_b_com_par_teste"] for r in runs)
+        fp = [t["fp"] for t in tests]
+        found = sum(round(t["recall_com_revisao"] * r["divisao"]["registros_b_com_par_teste"])
+                    for t, r in zip(tests, runs, strict=True))
+        out[name] = {
+            "fp_por_semente": fp,
+            "fp_total": sum(fp),
+            "fila_por_semente": [t["fila_revisao"] for t in tests],
+            "fila_total": sum(t["fila_revisao"] for t in tests),
+            "registros_encontrados_com_revisao": found,
+            "registros_com_par": n_true,
+            "recall_com_revisao": found / n_true,
+        }
+    return out
+
+
+def run_ml(cfg: dict, root: str | Path = ".") -> dict:
+    root = Path(root)
+    out_dir = root / cfg["saida"]
+    ml_cfg = {**DEFAULTS, **cfg.get("ml", {})}
+    seeds = [int(v) for v in ml_cfg.get("sementes", [ml_cfg["semente"]])]
+    fraction, folds = float(ml_cfg["fracao_teste"]), int(ml_cfg["folds"])
+    drop = cfg.get("padronizacao", {}).get("remover_particulas", True)
+
+    scored = pd.read_csv(out_dir / "candidatos.csv", dtype={"id_1": str, "id_2": str})
+    std_a = standardize_frame(read_registry(root / cfg["entrada"]["base_a"]), drop)
+    std_b = standardize_frame(read_registry(root / cfg["entrada"]["base_b"]), drop)
+    gab = read_registry(root / cfg["entrada"]["gabarito"])
+    gab = gab[gab["tipo"] == "link"]
+    truth = set(zip(gab["id_1"], gab["id_2"], strict=True))
+
+    scored["sim_primeiro_nome"] = first_name_similarity(scored, std_a, std_b)
+    x = build_features(scored)
+    y = np.array([(a, b) in truth for a, b in zip(scored["id_1"], scored["id_2"], strict=True)],
+                 dtype=int)
+    runs = [evaluate_seed(scored, x, y, std_b, gab, truth, cfg, s, fraction, folds)
+            for s in seeds]
+
+    first = runs[0]
     metrics = {
-        "divisao": {
-            "criterio": "registro da base B (hash do id com semente)",
-            "semente": seed,
-            "folds_validacao_cruzada": folds,
-            "pares_treino": int(len(tr)), "pares_teste": int(len(te)),
-            "positivos_treino": int(y_tr.sum()), "positivos_teste": int(y_te.sum()),
-            "registros_b_com_par_treino": n_true["treino"],
-            "registros_b_com_par_teste": n_true["teste"],
-        },
+        "divisao": {"criterio": "registro da base B (hash do id com semente)",
+                    "folds_validacao_cruzada": folds, **first["divisao"]},
         "variaveis": list(x.columns),
-        "metas_do_treino": targets,
-        "resultados_teste": results,
-        "coeficientes_regressao_logistica": coefficients,
+        "metas_do_treino": first["metas_do_treino"],
+        "resultados_teste": first["resultados_teste"],
+        "coeficientes_regressao_logistica": first["coeficientes_regressao_logistica"],
+        "sementes": seeds,
+        "todas_as_sementes": summarize_seeds(runs),
     }
     metrics = _round(metrics)
     with open(out_dir / "ml_metricas.json", "w", encoding="utf-8") as fh:
