@@ -1,0 +1,121 @@
+{
+  "divisao": {
+    "criterio": "registro da base B (hash do id com semente)",
+    "semente": 42,
+    "folds_validacao_cruzada": 5,
+    "pares_treino": 70287,
+    "pares_teste": 68610,
+    "positivos_treino": 956,
+    "positivos_teste": 888,
+    "registros_b_com_par_treino": 932,
+    "registros_b_com_par_teste": 868
+  },
+  "variaveis": [
+    "sim_nome",
+    "ausente_nome",
+    "sim_primeiro_nome",
+    "ausente_primeiro_nome",
+    "sim_nome_mae",
+    "ausente_nome_mae",
+    "sim_sexo",
+    "ausente_sexo",
+    "sim_municipio",
+    "ausente_municipio",
+    "sim_documento",
+    "ausente_documento",
+    "data_igual",
+    "data_dia_mes_trocado",
+    "data_so_ano",
+    "data_diferente",
+    "data_ausente"
+  ],
+  "metas_do_treino": {
+    "precisao_minima": 0.9989,
+    "recall_com_revisao_minimo": 0.9936
+  },
+  "resultados_teste": {
+    "regra_ponderada": {
+      "nome": "Pontuação ponderada (pesos manuais)",
+      "teste": {
+        "limiar_match": 0.9,
+        "limiar_revisao": 0.7,
+        "pares_automaticos": 832,
+        "fp": 5,
+        "fp_perfil_gemeos": 5,
+        "precisao": 0.994,
+        "recall_automatico": 0.9528,
+        "fila_revisao": 81,
+        "fila_verdadeiros": 37,
+        "recall_com_revisao": 0.9954
+      },
+      "precisao_media": 0.9974
+    },
+    "regressao_logistica": {
+      "nome": "Regressão logística",
+      "teste": {
+        "limiar_match": 0.8243,
+        "limiar_revisao": 0.021,
+        "pares_automaticos": 823,
+        "fp": 1,
+        "fp_perfil_gemeos": 1,
+        "precisao": 0.9988,
+        "recall_automatico": 0.947,
+        "fila_revisao": 84,
+        "fila_verdadeiros": 42,
+        "recall_com_revisao": 0.9954
+      },
+      "precisao_media": 0.9997
+    },
+    "regressao_logistica_sem_primeiro_nome": {
+      "nome": "Regressão logística sem o primeiro nome",
+      "teste": {
+        "limiar_match": 0.928,
+        "limiar_revisao": 0.027,
+        "pares_automaticos": 779,
+        "fp": 3,
+        "fp_perfil_gemeos": 3,
+        "precisao": 0.9961,
+        "recall_automatico": 0.894,
+        "fila_revisao": 127,
+        "fila_verdadeiros": 88,
+        "recall_com_revisao": 0.9954
+      },
+      "precisao_media": 0.9987
+    },
+    "gradient_boosting": {
+      "nome": "Gradient boosting",
+      "teste": {
+        "limiar_match": 0.9762,
+        "limiar_revisao": 0.0,
+        "pares_automaticos": 863,
+        "fp": 0,
+        "fp_perfil_gemeos": 0,
+        "precisao": 1.0,
+        "recall_automatico": 0.9942,
+        "fila_revisao": 43,
+        "fila_verdadeiros": 1,
+        "recall_com_revisao": 0.9954
+      },
+      "precisao_media": 1.0
+    }
+  },
+  "coeficientes_regressao_logistica": {
+    "sim_nome": 7.6518,
+    "data_diferente": -5.6126,
+    "sim_nome_mae": 5.1986,
+    "sim_primeiro_nome": 5.1897,
+    "sim_documento": 4.5083,
+    "ausente_nome_mae": 3.471,
+    "sim_municipio": 2.1824,
+    "data_igual": 2.1376,
+    "data_ausente": -1.8865,
+    "ausente_documento": 1.849,
+    "data_so_ano": -1.6417,
+    "sim_sexo": 0.652,
+    "data_dia_mes_trocado": -0.2774,
+    "ausente_nome": 0.0,
+    "ausente_primeiro_nome": 0.0,
+    "ausente_sexo": 0.0,
+    "ausente_municipio": 0.0
+  }
+}

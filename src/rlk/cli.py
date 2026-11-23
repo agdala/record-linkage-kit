@@ -1,4 +1,4 @@
-"""Command line interface: ``rlk generate``, ``rlk link`` and ``rlk evaluate``."""
+"""Command line interface: ``rlk generate``, ``link``, ``pseudo``, ``evaluate`` and ``ml``."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from rlk.config import load_config
 from rlk.evaluate import run_evaluate
 from rlk.generate import GeneratorConfig, generate
 from rlk.link import run_link
+from rlk.ml import run_ml
 from rlk.pseudonymize import SaltError, run_pseudo
 
 
@@ -62,6 +63,20 @@ def _cmd_pseudo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ml(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    m = run_ml(cfg)
+    d = m["divisao"]
+    print(f"Teste: {d['registros_b_com_par_teste']} registros de B com par "
+          f"({d['pares_teste']:,} pares candidatos)")
+    for r in m["resultados_teste"].values():
+        t = r["teste"]
+        print(f"  {r['nome']}: {t['fp']} falsos positivos, recall automático "
+              f"{t['recall_automatico']:.2%}, fila {t['fila_revisao']} pares")
+    print(f"Métricas: {cfg['saida']}/ml_metricas.json")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="rlk", description="Record linkage com governança de dados"
@@ -86,6 +101,10 @@ def build_parser() -> argparse.ArgumentParser:
     ev = sub.add_parser("evaluate", help="compara com o gabarito e gera o relatório HTML")
     ev.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
     ev.set_defaults(func=_cmd_evaluate)
+
+    ml = sub.add_parser("ml", help="classificador supervisionado contra a pontuação ponderada")
+    ml.add_argument("--config", default="config/default.yaml", help="arquivo YAML")
+    ml.set_defaults(func=_cmd_ml)
     return parser
 
 
