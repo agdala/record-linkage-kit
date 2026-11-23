@@ -1,8 +1,8 @@
 {
   "divisao": {
     "criterio": "registro da base B (hash do id com semente)",
-    "semente": 42,
     "folds_validacao_cruzada": 5,
+    "semente": 42,
     "pares_treino": 70287,
     "pares_teste": 68610,
     "positivos_treino": 956,
@@ -53,14 +53,14 @@
     "regressao_logistica": {
       "nome": "Regressão logística",
       "teste": {
-        "limiar_match": 0.8232,
-        "limiar_revisao": 0.0421,
+        "limiar_match": 0.8153,
+        "limiar_revisao": 0.03,
         "pares_automaticos": 824,
         "fp": 1,
         "fp_perfil_gemeos": 1,
         "precisao": 0.9988,
         "recall_automatico": 0.9482,
-        "fila_revisao": 66,
+        "fila_revisao": 72,
         "fila_verdadeiros": 41,
         "recall_com_revisao": 0.9954
       },
@@ -69,31 +69,31 @@
     "regressao_logistica_sem_primeiro_nome": {
       "nome": "Regressão logística sem o primeiro nome",
       "teste": {
-        "limiar_match": 0.9261,
-        "limiar_revisao": 0.5623,
-        "pares_automaticos": 772,
-        "fp": 2,
-        "fp_perfil_gemeos": 2,
-        "precisao": 0.9974,
-        "recall_automatico": 0.8871,
-        "fila_revisao": 97,
-        "fila_verdadeiros": 88,
-        "recall_com_revisao": 0.9885
+        "limiar_match": 0.9221,
+        "limiar_revisao": 0.585,
+        "pares_automaticos": 774,
+        "fp": 3,
+        "fp_perfil_gemeos": 3,
+        "precisao": 0.9961,
+        "recall_automatico": 0.8882,
+        "fila_revisao": 94,
+        "fila_verdadeiros": 86,
+        "recall_com_revisao": 0.9873
       },
       "precisao_media": 0.9988
     },
     "gradient_boosting": {
       "nome": "Gradient boosting",
       "teste": {
-        "limiar_match": 0.9895,
-        "limiar_revisao": 0.0001,
-        "pares_automaticos": 863,
-        "fp": 0,
-        "fp_perfil_gemeos": 0,
-        "precisao": 1.0,
-        "recall_automatico": 0.9942,
-        "fila_revisao": 7,
-        "fila_verdadeiros": 1,
+        "limiar_match": 0.0524,
+        "limiar_revisao": 0.0002,
+        "pares_automaticos": 865,
+        "fp": 1,
+        "fp_perfil_gemeos": 1,
+        "precisao": 0.9988,
+        "recall_automatico": 0.9954,
+        "fila_revisao": 3,
+        "fila_verdadeiros": 0,
         "recall_com_revisao": 0.9954
       },
       "precisao_media": 1.0
@@ -117,5 +117,98 @@
     "ausente_primeiro_nome": 0.0,
     "ausente_sexo": 0.0,
     "ausente_municipio": 0.0
+  },
+  "sementes": [
+    42,
+    7,
+    123,
+    2026,
+    99
+  ],
+  "todas_as_sementes": {
+    "regra_ponderada": {
+      "fp_por_semente": [
+        5,
+        3,
+        3,
+        1,
+        2
+      ],
+      "fp_total": 14,
+      "fila_por_semente": [
+        81,
+        103,
+        79,
+        82,
+        84
+      ],
+      "fila_total": 429,
+      "registros_encontrados_com_revisao": 4447,
+      "registros_com_par": 4476,
+      "recall_com_revisao": 0.9935
+    },
+    "regressao_logistica": {
+      "fp_por_semente": [
+        1,
+        1,
+        4,
+        2,
+        0
+      ],
+      "fp_total": 8,
+      "fila_por_semente": [
+        72,
+        88,
+        82,
+        68,
+        73
+      ],
+      "fila_total": 383,
+      "registros_encontrados_com_revisao": 4446,
+      "registros_com_par": 4476,
+      "recall_com_revisao": 0.9933
+    },
+    "regressao_logistica_sem_primeiro_nome": {
+      "fp_por_semente": [
+        3,
+        2,
+        3,
+        1,
+        1
+      ],
+      "fp_total": 10,
+      "fila_por_semente": [
+        94,
+        46,
+        92,
+        65,
+        81
+      ],
+      "fila_total": 378,
+      "registros_encontrados_com_revisao": 4363,
+      "registros_com_par": 4476,
+      "recall_com_revisao": 0.9748
+    },
+    "gradient_boosting": {
+      "fp_por_semente": [
+        1,
+        1,
+        3,
+        5,
+        2
+      ],
+      "fp_total": 12,
+      "fila_por_semente": [
+        3,
+        8,
+        0,
+        0,
+        0
+      ],
+      "fila_total": 11,
+      "registros_encontrados_com_revisao": 4447,
+      "registros_com_par": 4476,
+      "recall_com_revisao": 0.9935
+    }
   }
 }

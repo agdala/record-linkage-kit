@@ -13,6 +13,7 @@ from rlk.ml import (
     build_features,
     choose_thresholds,
     first_name_similarity,
+    fold_of,
     in_test,
     operating_point,
     run_ml,
@@ -27,6 +28,14 @@ def test_split_is_deterministic_and_depends_on_seed():
     assert a.equals(b)
     assert 400 < a.sum() < 600  # roughly half
     assert not a.equals(in_test(ids, 0.5, 7))
+
+
+def test_folds_are_deterministic_and_balanced():
+    ids = pd.Series([f"B{i:05d}" for i in range(1000)])
+    folds = fold_of(ids, 5, 42)
+    assert (folds == fold_of(ids, 5, 42)).all()
+    assert set(folds) == {0, 1, 2, 3, 4}
+    assert all(150 < (folds == k).sum() < 250 for k in range(5))
 
 
 def test_features_keep_missing_apart_from_mismatch():

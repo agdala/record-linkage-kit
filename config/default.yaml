@@ -50,5 +50,6 @@ deduplicacao:
 # comparado com a pontuação ponderada acima na mesma metade de teste. Ver README, seção 5.
 ml:
   fracao_teste: 0.5   # metade dos registros de B fica só para o teste
-  semente: 42         # divisão treino/teste e gradient boosting
+  semente: 42         # divisão treino/teste e gradient boosting (usada se `sementes` faltar)
+  sementes: [42, 7, 123, 2026, 99]  # cinco divisões diferentes; a primeira é a detalhada no README
   folds: 5            # validação cruzada no treino, usada para escolher os limiares
