@@ -92,7 +92,7 @@
         "fp_perfil_gemeos": 0,
         "precisao": 1.0,
         "recall_automatico": 0.9942,
-        "fila_revisao": 43,
+        "fila_revisao": 578,
         "fila_verdadeiros": 1,
         "recall_com_revisao": 0.9954
       },

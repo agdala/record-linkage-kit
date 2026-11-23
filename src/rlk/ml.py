@@ -41,6 +41,10 @@ MODELS = {
     "gradient_boosting": ("Gradient boosting", "boosting", ()),
 }
 DEFAULTS = {"fracao_teste": 0.5, "semente": 42, "folds": 5}
+# Probabilities are rounded like the weighted score (4 decimals). Different CPUs give results that
+# differ in the last bits of a float; without rounding, that noise reorders pairs near a threshold
+# and the published metrics would change from one CI machine to another.
+DECIMALS = 4
 
 
 # --------------------------------------------------------------------- features
@@ -97,7 +101,7 @@ def out_of_fold(kind: str, x: pd.DataFrame, y: np.ndarray, groups: pd.Series, fo
     for fit_idx, pred_idx in GroupKFold(n_splits=folds).split(x, y, groups):
         model = make_model(kind, seed).fit(x.iloc[fit_idx], y[fit_idx])
         prob[pred_idx] = model.predict_proba(x.iloc[pred_idx])[:, 1]
-    return prob
+    return np.round(prob, DECIMALS)
 
 
 # --------------------------------------------------------------------- operating points
@@ -201,7 +205,7 @@ def run_ml(cfg: dict, root: str | Path = ".") -> dict:
         thr = choose_thresholds(assign(tr, oof), truth, n_true["treino"],
                                 targets["precisao_minima"], targets["recall_com_revisao_minimo"])
         model = make_model(kind, seed).fit(x_tr[cols], y_tr)
-        prob = model.predict_proba(x_te[cols])[:, 1]
+        prob = np.round(model.predict_proba(x_te[cols])[:, 1], DECIMALS)
         results[name] = {
             "nome": label,
             "teste": operating_point(assign(te, prob), truth, n_true["teste"], thr),

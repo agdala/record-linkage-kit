@@ -277,7 +277,7 @@ candidatos ([`reports/ml_metricas.json`](reports/ml_metricas.json)).
 | Pontuação ponderada (limiares 0,90 e 0,70) | 5, todos gêmeos | 99,4% | 95,3% | 81 pares | 99,5% |
 | **Regressão logística** | **1** | **99,9%** | 94,7% | 84 pares | 99,5% |
 | Regressão logística sem o primeiro nome | 3 | 99,6% | 89,4% | 127 pares | 99,5% |
-| Gradient boosting | 0 | 100,0% | 99,4% | 43 pares | 99,5% |
+| Gradient boosting | 0 | 100,0% | 99,4% | 578 pares | 99,5% |
 
 O recall após revisão é o mesmo nas quatro linhas porque já está no teto da blocagem: os pares que
 faltam nunca chegaram a ser comparados.
@@ -294,9 +294,12 @@ faltam nunca chegaram a ser comparados.
 - **Os pesos aprendidos podem ser lidos.** Os maiores coeficientes da regressão logística são o
   nome completo (7,7), a data diferente (-5,6), o nome da mãe (5,2), o primeiro nome (5,2) e o
   documento (4,5). Dá para explicar a quem revisa a fila por que um par foi aceito.
-- **O gradient boosting acerta quase tudo, e esse número merece desconfiança.** O gerador
-  sintético cria erros com regras fixas, e um modelo flexível aprende essas regras. Em dados reais
-  o desempenho tende a ser pior (seção 8).
+- **O gradient boosting acerta quase tudo no automático, mas não ajuda a revisão.** Ele dá
+  probabilidade praticamente zero aos poucos pares verdadeiros que não aceita. Para chegar ao mesmo
+  recall após revisão, a fila teria 578 pares, sete vezes a da pontuação ponderada, para achar 1
+  par a mais. Um modelo confiante demais falha justamente na faixa de dúvida, onde o revisor
+  precisa de ajuda. O acerto no automático também merece desconfiança: o gerador sintético cria
+  erros com regras fixas, e um modelo flexível aprende essas regras (seção 8).
 
 Para uso real, a escolha seria a regressão logística: melhora clara sobre os pesos manuais, pesos
 que dá para auditar e um modelo simples de explicar. O gradient boosting só deveria ser adotado
@@ -436,7 +439,9 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 - **O classificador aprende com rótulos perfeitos.** Os rótulos vêm do gabarito. Num uso real,
   viriam das decisões da fila de revisão (`decisao_revisor`), que têm erros e cobrem só os pares
   duvidosos. As probabilidades também não foram calibradas: servem para ordenar os pares, não como
-  chance real de serem a mesma pessoa.
+  chance real de serem a mesma pessoa. Com cerca de 900 pares verdadeiros em cada metade, um ou
+  dois falsos positivos de diferença entre métodos estão dentro da margem de acaso; a diferença
+  entre 5 e 1 já é mais consistente, mas pede confirmação com outras sementes.
 - **Deduplicação fácil demais.** As duplicatas internas de A têm só 1 ou 2 erros leves, por isso
   100% de precisão e recall. Duplicatas reais tendem a ser mais difíceis.
 - **Resolução 1:1 gulosa** não é ótima globalmente e não forma grupos (clusters) com mais de dois

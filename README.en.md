@@ -284,7 +284,7 @@ from the test half, which no model saw: 868 B records with a pair and 68,610 can
 | Weighted score (thresholds 0.90 and 0.70) | 5, all twins | 99.4% | 95.3% | 81 pairs | 99.5% |
 | **Logistic regression** | **1** | **99.9%** | 94.7% | 84 pairs | 99.5% |
 | Logistic regression without the first name | 3 | 99.6% | 89.4% | 127 pairs | 99.5% |
-| Gradient boosting | 0 | 100.0% | 99.4% | 43 pairs | 99.5% |
+| Gradient boosting | 0 | 100.0% | 99.4% | 578 pairs | 99.5% |
 
 Recall after review is the same on all four rows because it is already at the blocking ceiling:
 the missing pairs were never compared.
@@ -301,9 +301,12 @@ the missing pairs were never compared.
 - **The learned weights can be read.** The largest logistic regression coefficients are the full
   name (7.7), a different date (-5.6), the mother's name (5.2), the first name (5.2) and the
   document (4.5). A reviewer can be told why a pair was accepted.
-- **Gradient boosting gets almost everything right, and that number deserves suspicion.** The
-  synthetic generator creates errors with fixed rules, and a flexible model learns those rules.
-  On real data, performance tends to be lower (section 8).
+- **Gradient boosting gets almost everything right automatically, but it does not help review.**
+  It gives practically zero probability to the few true pairs it does not accept. To reach the
+  same recall after review, the queue would have 578 pairs, seven times the weighted score's, to
+  find 1 more pair. An overconfident model fails exactly in the doubtful band, where the reviewer
+  needs help. Its automatic result also deserves suspicion: the synthetic generator creates errors
+  with fixed rules, and a flexible model learns those rules (section 8).
 
 For real use, the choice would be logistic regression: a clear improvement over the hand-set
 weights, weights that can be audited and a model that is simple to explain. Gradient boosting
@@ -443,7 +446,9 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
 - **The classifier learns from perfect labels.** The labels come from the ground truth. In real
   use they would come from the review queue decisions (`decisao_revisor`), which contain errors and
   only cover doubtful pairs. The probabilities were not calibrated either: they rank pairs, they
-  are not the actual chance of being the same person.
+  are not the actual chance of being the same person. With about 900 true pairs in each half, a
+  difference of one or two false positives between methods is within chance; the gap between 5 and
+  1 is more consistent, but should be confirmed with other seeds.
 - **Deduplication is too easy.** The internal duplicates of A have only 1 or 2 light errors, hence
   100% precision and recall. Real duplicates tend to be harder.
 - **Greedy 1:1 resolution** is not globally optimal and does not form clusters with more than two
