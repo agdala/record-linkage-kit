@@ -1,9 +1,9 @@
-.PHONY: install run generate link pseudo evaluate test lint sample clean
+.PHONY: install run generate link pseudo evaluate ml test lint sample clean
 
 install:      ## instala o projeto e as dependências de desenvolvimento
 	pip install -e ".[dev]"
 
-run: generate link pseudo evaluate ## fluxo completo: gerar, cruzar, pseudonimizar e avaliar
+run: generate link pseudo evaluate ml ## fluxo completo: gerar, cruzar, pseudonimizar, avaliar e comparar com ML
 
 generate:     ## gera data/base_a.csv, data/base_b.csv e data/gabarito.csv
 	rlk generate
@@ -19,6 +19,9 @@ pseudo:       ## cruzamento por hashes SHA-256 com sal secreto (RLK_SALT)
 
 evaluate:     ## métricas contra o gabarito e relatório (reports/relatorio.html)
 	rlk evaluate --config config/default.yaml
+
+ml:           ## classificador supervisionado contra a pontuação ponderada (reports/ml_metricas.json)
+	rlk ml --config config/default.yaml
 
 test:         ## testes unitários e de ponta a ponta (amostra sintética)
 	python -m pytest

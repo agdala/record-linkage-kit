@@ -45,3 +45,10 @@ limiares:
 deduplicacao:
   ativa: true
   limiar: 0.90
+
+# Classificador supervisionado (`rlk ml`): aprende os pesos a partir de pares rotulados e é
+# comparado com a pontuação ponderada acima na mesma metade de teste. Ver README, seção 5.
+ml:
+  fracao_teste: 0.5   # metade dos registros de B fica só para o teste
+  semente: 42         # divisão treino/teste e gradient boosting
+  folds: 5            # validação cruzada no treino, usada para escolher os limiares

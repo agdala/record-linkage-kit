@@ -5,7 +5,7 @@
 [![ci](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml)
 [![relatório](https://github.com/agdala/record-linkage-kit/actions/workflows/pages.yml/badge.svg)](https://agdala.github.io/record-linkage-kit/)
 
-Deduplicação e cruzamento de cadastros de pessoas (record linkage) em Python, com revisão humana, pseudonimização e avaliação contra um gabarito.
+Deduplicação e cruzamento de cadastros de pessoas (record linkage) em Python, com revisão humana, pseudonimização, avaliação contra um gabarito e comparação com classificadores de machine learning.
 
 **Relatório de avaliação (GitHub Pages):** <https://agdala.github.io/record-linkage-kit/>
 
@@ -95,7 +95,12 @@ $env:RLK_SALT = python -c "import secrets; print(secrets.token_hex(32))"; rlk ps
 rlk evaluate
 ```
 
-Abra `reports\relatorio.html` no navegador.
+```bash
+rlk ml
+```
+
+Abra `reports\relatorio.html` no navegador. O `rlk ml` grava a comparação com os classificadores
+em `reports\ml_metricas.json` (seção 4.6).
 
 > Se a ativação der erro de "execução de scripts desabilitada", rode uma vez
 > `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` e repita.
@@ -117,7 +122,7 @@ make run
 ```
 
 `make run` executa `rlk generate`, `rlk link`, `rlk pseudo` (com um sal efêmero, se `RLK_SALT` não
-estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
+estiver definido), `rlk evaluate` e `rlk ml`. Leva cerca de 20 segundos.
 
 ### 3.3 Comandos
 
@@ -127,6 +132,7 @@ estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
 | `rlk link --config config/default.yaml` | Padroniza, bloca, compara, pontua, classifica, resolve 1:1 e deduplica a base A |
 | `rlk pseudo` | Cruza as bases só por hashes SHA-256 com sal secreto (`RLK_SALT`) |
 | `rlk evaluate` | Compara com o gabarito e gera `reports/metricas.json` e `reports/relatorio.html` |
+| `rlk ml` | Treina regressão logística e gradient boosting com os pares rotulados e compara com a pontuação ponderada (`reports/ml_metricas.json`) |
 
 ### 3.4 Saídas
 
@@ -140,6 +146,7 @@ estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
 | `reports/resumo_link.json` | Contagens e registro do cruzamento (hash das bases e da configuração) | Não |
 | `reports/metricas.json` | Todas as métricas da avaliação | **Sim** |
 | `reports/relatorio.html` | Relatório autocontido, também publicado no Pages | **Sim** |
+| `reports/ml_metricas.json` | Comparação dos classificadores com a pontuação ponderada na metade de teste | **Sim** |
 
 ### 3.5 Testes
 
@@ -147,9 +154,9 @@ estiver definido) e `rlk evaluate`. Leva cerca de 15 segundos.
 make test
 ```
 
-São 78 testes (pytest) sobre a amostra sintética de `data/sample/` (200 + 120 registros): uma
+São 85 testes (pytest) sobre a amostra sintética de `data/sample/` (200 + 120 registros): uma
 regra de padronização ou fonética por teste, blocagem, comparação, pontuação, resolução 1:1,
-avaliação, pseudonimização e o fluxo de ponta a ponta. O CI roda `ruff`, `pytest` e `make run` em
+avaliação, pseudonimização, classificadores e o fluxo de ponta a ponta. O CI roda `ruff`, `pytest` e `make run` em
 Python 3.10 e 3.12 a cada push.
 
 ## 4. Resultados
@@ -256,6 +263,49 @@ O [relatório](https://agdala.github.io/record-linkage-kit/) traz ainda o recall
 - registros **sem data de nascimento** ficam com 91,9% de recall mesmo com revisão: duas das três
   regras de blocagem dependem do ano.
 
+### 4.6 Classificador supervisionado (machine learning)
+
+Os pesos da pontuação ponderada (seção 5.2) foram escolhidos à mão. O comando `rlk ml` mede se
+modelos que aprendem os pesos a partir de pares rotulados fazem melhor nas mesmas condições
+(método na seção 5.4). Cada modelo precisa manter, no mínimo, a precisão automática que a
+pontuação ponderada tem na metade de treino (99,9%), com uma fila de revisão do mesmo tamanho
+(99 pares no treino, a mesma capacidade de revisão). Os números abaixo são da metade de teste,
+que nenhum modelo viu: 868 registros de B com par e 68.610 pares candidatos
+([`reports/ml_metricas.json`](reports/ml_metricas.json)).
+
+| Método | Falsos positivos automáticos | Precisão | Recall automático | Fila de revisão | Recall após revisão |
+|---|---|---|---|---|---|
+| Pontuação ponderada (limiares 0,90 e 0,70) | 5, todos gêmeos | 99,4% | 95,3% | 81 pares | 99,5% |
+| **Regressão logística** | **1** | **99,9%** | 94,8% | 66 pares | 99,5% |
+| Regressão logística sem o primeiro nome | 2 | 99,7% | 88,7% | 97 pares | 98,8% |
+| Gradient boosting | 0 | 100,0% | 99,4% | 7 pares | 99,5% |
+
+O recall após revisão de 99,5% é o teto da blocagem nesta metade: os pares que faltam nunca
+chegaram a ser comparados.
+
+**O que os números mostram:**
+
+- **A regressão logística evita 4 fusões indevidas com uma fila menor.** Os falsos positivos
+  caem de 5 para 1, a fila cai de 81 para 66 pares e o recall após revisão fica igual. O recall
+  automático cai 0,5 ponto: alguns pares verdadeiros saem do automático e vão para a revisão, o que
+  a seção 4.3 considera aceitável (fundir duas pessoas custa mais que revisar um par).
+- **Boa parte do ganho vem de uma variável nova, a similaridade do primeiro nome.** A pontuação
+  ponderada só compara o nome completo, e nele um primeiro nome diferente fica diluído nos
+  sobrenomes iguais. É o padrão dos gêmeos da seção 4.3. Sem essa variável, a regressão logística
+  perde 6 pontos de recall automático e, com a mesma capacidade de revisão, deixa de achar 6
+  pessoas (98,8% contra 99,5%).
+- **Os pesos aprendidos podem ser lidos.** Os maiores coeficientes da regressão logística são o
+  nome completo (7,5), o nome da mãe (5,1), o primeiro nome (4,9), o documento (4,5) e a data
+  diferente (-4,4). Dá para explicar a quem revisa a fila por que um par foi aceito.
+- **O gradient boosting acerta quase tudo, e esse número merece desconfiança.** Nenhum falso
+  positivo e uma fila de só 7 pares parecem bons demais. O gerador sintético cria erros com regras
+  fixas, e um modelo flexível aprende essas regras. Em dados reais o desempenho tende a ser pior
+  (seção 8), e o modelo é mais difícil de explicar a quem revisa.
+
+Para uso real, a escolha seria a regressão logística: melhora clara sobre os pesos manuais, pesos
+que dá para auditar e um modelo simples de explicar. O gradient boosting só deveria ser adotado
+se repetisse o resultado numa amostra real rotulada por revisores.
+
 ## 5. Como funciona
 
 ### 5.1 Padronização ([`standardize.py`](src/rlk/standardize.py))
@@ -314,6 +364,25 @@ O recall é medido **por registro de B**: um registro com par conta como encontr
 a qualquer registro de A da mesma pessoa (a pessoa pode estar duplicada em A). A completude da
 blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto do recall.
 
+### 5.4 Classificador supervisionado ([`ml.py`](src/rlk/ml.py))
+
+- **Divisão treino e teste:** os registros de B são divididos ao meio por um hash do id com
+  semente fixa. Cada pessoa aparece uma vez em B, então nenhuma pessoa tem pares nos dois lados.
+- **Variáveis:** as mesmas similaridades da pontuação ponderada, uma marcação de campo ausente
+  para cada uma (ausente não é o mesmo que diferente), o nível da data em colunas 0 ou 1 e a
+  similaridade Jaro-Winkler do primeiro nome. O rótulo de cada par candidato vem do gabarito.
+- **Modelos (scikit-learn):** regressão logística, gradient boosting (`HistGradientBoosting`) e,
+  como controle, a mesma regressão logística sem o primeiro nome, para separar o efeito da
+  variável nova do efeito de aprender os pesos.
+- **Limiares:** escolhidos só no treino, sobre probabilidades de validação cruzada em 5 partes,
+  agrupadas por registro de B. O limiar de match é a menor probabilidade que mantém a precisão da
+  pontuação ponderada no treino; o de revisão deixa na fila o mesmo número de pares que ela deixa
+  no treino. Depois disso o modelo é treinado com todo o treino e aplicado uma única vez ao teste,
+  com a mesma resolução 1:1 do fluxo principal.
+- **Reprodutibilidade:** a regressão logística é resolvida com tolerância apertada (o ótimo é
+  único), o gradient boosting roda um número fixo de árvores e as probabilidades são arredondadas
+  para 4 casas, como a pontuação ponderada. Assim o resultado não muda de uma máquina para outra.
+
 ## 6. Proteção de dados
 
 O projeto adota os princípios da LGPD (finalidade, necessidade, segurança, minimização) como
@@ -350,6 +419,9 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 | **Resolução 1:1 gulosa** | Simples, determinística e suficiente quando cada pessoa aparece uma vez em B. Um único passe serve a todos os limiares da avaliação. |
 | **HMAC-SHA256 em vez de SHA-256(sal + valor)** | É a construção padrão para hash com segredo e evita o ataque de extensão de comprimento do SHA-256 puro; continua sendo "SHA-256 com sal secreto". |
 | **Relatório HTML único, sem bibliotecas externas** | Gráfico em SVG gerado em Python, abre offline e é publicado no Pages como um arquivo só. |
+| **Classificador comparado em metade de teste separada por pessoa** | Escolher limiares e medir no mesmo conjunto inflaria o resultado. A divisão por registro de B impede que a mesma pessoa apareça no treino e no teste. |
+| **Meta do classificador igual à da pontuação ponderada** | Com a mesma precisão mínima e a mesma capacidade de revisão, a comparação fica no que importa para a operação: fusões indevidas, tamanho da fila e pessoas encontradas. |
+| **scikit-learn com versão fixa (`scikit-learn==1.7.2`)** | É a última versão que roda em Python 3.10 e 3.12; o CI confere que `ml_metricas.json` se reproduz nas duas. |
 | **`metricas.json` e `relatorio.html` versionados; CSVs com registros fora do Git** | Os números do README ficam rastreáveis sem versionar tabelas com nomes, mesmo sintéticos. |
 
 ## 8. Limitações
@@ -365,8 +437,15 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
   amostra rotulada por revisores, separada da usada para calibrar.
 - **Dados sintéticos são mais regulares que os reais.** As taxas de erro foram escolhidas, não
   medidas em bases reais; os números servem para comparar métodos, não para prometer resultados.
-- **Pesos e limiares definidos à mão.** Não foram estimados dos dados (como no modelo
-  Fellegi-Sunter); numa base real, precisam ser calibrados numa amostra rotulada.
+- **Pesos e limiares definidos à mão** na pontuação ponderada. A seção 4.6 compara com pesos
+  aprendidos, mas ainda falta estimá-los sem gabarito (Fellegi-Sunter com EM); numa base real,
+  precisam ser calibrados numa amostra rotulada.
+- **O classificador aprende com rótulos perfeitos.** Os rótulos vêm do gabarito. Num uso real,
+  viriam das decisões da fila de revisão (`decisao_revisor`), que têm erros e cobrem só os pares
+  duvidosos. As probabilidades também não foram calibradas: servem para ordenar os pares, não como
+  chance real de serem a mesma pessoa. Com cerca de 900 pares verdadeiros em cada metade, um ou
+  dois falsos positivos de diferença entre métodos estão dentro da margem de acaso; a diferença
+  entre 5 e 1 já é mais consistente, mas pede confirmação com outras sementes.
 - **Deduplicação fácil demais.** As duplicatas internas de A têm só 1 ou 2 erros leves, por isso
   100% de precisão e recall. Duplicatas reais tendem a ser mais difíceis.
 - **Resolução 1:1 gulosa** não é ótima globalmente e não forma grupos (clusters) com mais de dois
@@ -388,6 +467,8 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
    Cuidado: a regra também desvia para a fila pares verdadeiros cujo primeiro nome tem erro de
    digitação ou abreviação. O custo na fila precisa ser medido e publicado em `metricas.json`
    antes de adotá-la, e o critério pode exigir similaridade baixa do primeiro nome, não só diferença.
+   O classificador da seção 4.6 mostra que a similaridade do primeiro nome resolve a maior parte
+   desses casos.
 2. **Comparar com o Splink** nas mesmas bases e com o mesmo gabarito.
 3. **Fellegi-Sunter com EM:** estimar as probabilidades m e u e os pesos de cada nível de
    comparação a partir dos dados, em vez de pesos fixos.
@@ -396,17 +477,19 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 5. Agrupamento (clusters) na deduplicação, para pessoas com três ou mais registros.
 6. Pareamento pseudonimizado aproximado com filtros de Bloom (privacy-preserving record linkage).
 7. Medir a concordância entre revisores na fila de revisão.
+8. Treinar o classificador com as decisões dos revisores, escolhendo para a fila os pares em que o
+   modelo tem mais dúvida (aprendizado ativo), e calibrar as probabilidades.
 
 ## 10. Estrutura do repositório
 
 ```
 record-linkage-kit/
-├── src/rlk/            # generate, standardize, blocking, compare, link, evaluate, report, pseudonymize, cli
+├── src/rlk/            # generate, standardize, blocking, compare, link, evaluate, report, pseudonymize, ml, cli
 ├── config/             # default.yaml: blocagem, pesos, níveis de data, limiares
 ├── tests/              # pytest com a amostra sintética
 ├── docs/               # protecao_de_dados.md
 ├── data/               # bases geradas (fora do Git), exceto data/sample/
-├── reports/            # metricas.json e relatorio.html versionados; demais saídas fora do Git
+├── reports/            # metricas.json, ml_metricas.json e relatorio.html versionados; demais saídas fora do Git
 └── .github/workflows/  # ci.yml (ruff + pytest + make run) e pages.yml (relatório no Pages)
 ```
 
@@ -428,6 +511,9 @@ from 0 to 1 that ignores missing fields, two thresholds (auto-match and manual r
 at 0.90; a review queue of 164 pairs (5.5% of list B) lifts recall to **99.4%**. A pseudonymized
 mode (salted SHA-256 via HMAC, salt kept in an environment variable) links without exchanging
 names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
+A supervised comparison (`rlk ml`, scikit-learn) trains logistic regression and gradient boosting
+on half of list B and tests on the other half: logistic regression cuts automatic false positives
+from 5 to 1 with a smaller review queue, largely thanks to a first-name similarity feature.
 The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
 checks that the published metrics are reproduced.
 

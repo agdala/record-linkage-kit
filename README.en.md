@@ -5,7 +5,7 @@
 [![ci](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/agdala/record-linkage-kit/actions/workflows/ci.yml)
 [![relatório](https://github.com/agdala/record-linkage-kit/actions/workflows/pages.yml/badge.svg)](https://agdala.github.io/record-linkage-kit/)
 
-Deduplication and linkage of person registries (record linkage) in Python, with human review, pseudonymization and evaluation against a ground truth.
+Deduplication and linkage of person registries (record linkage) in Python, with human review, pseudonymization, evaluation against a ground truth and a comparison with machine learning classifiers.
 
 **Evaluation report (GitHub Pages):** <https://agdala.github.io/record-linkage-kit/>
 
@@ -100,7 +100,12 @@ $env:RLK_SALT = python -c "import secrets; print(secrets.token_hex(32))"; rlk ps
 rlk evaluate
 ```
 
-Open `reports\relatorio.html` in the browser.
+```bash
+rlk ml
+```
+
+Open `reports\relatorio.html` in the browser. `rlk ml` writes the comparison with the classifiers to
+`reports\ml_metricas.json` (section 4.6).
 
 > If activation fails with "running scripts is disabled", run
 > `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` once and try again.
@@ -122,7 +127,7 @@ make run
 ```
 
 `make run` runs `rlk generate`, `rlk link`, `rlk pseudo` (with an ephemeral salt, if `RLK_SALT` is
-not set) and `rlk evaluate`. It takes about 15 seconds.
+not set), `rlk evaluate` and `rlk ml`. It takes about 20 seconds.
 
 ### 3.3 Commands
 
@@ -132,6 +137,7 @@ not set) and `rlk evaluate`. It takes about 15 seconds.
 | `rlk link --config config/default.yaml` | Standardizes, blocks, compares, scores, classifies, resolves 1:1 and deduplicates base A |
 | `rlk pseudo` | Links the bases using only SHA-256 hashes with a secret salt (`RLK_SALT`) |
 | `rlk evaluate` | Compares with the ground truth and generates `reports/metricas.json` and `reports/relatorio.html` |
+| `rlk ml` | Trains logistic regression and gradient boosting on the labelled pairs and compares them with the weighted score (`reports/ml_metricas.json`) |
 
 ### 3.4 Outputs
 
@@ -145,6 +151,7 @@ not set) and `rlk evaluate`. It takes about 15 seconds.
 | `reports/resumo_link.json` | Counts and linkage log (hash of the bases and of the configuration) | No |
 | `reports/metricas.json` | All evaluation metrics | **Yes** |
 | `reports/relatorio.html` | Self-contained report, also published on Pages | **Yes** |
+| `reports/ml_metricas.json` | Classifiers compared with the weighted score on the test half | **Yes** |
 
 ### 3.5 Tests
 
@@ -152,9 +159,9 @@ not set) and `rlk evaluate`. It takes about 15 seconds.
 make test
 ```
 
-There are 78 tests (pytest) on the synthetic sample in `data/sample/` (200 + 120 records): one
+There are 85 tests (pytest) on the synthetic sample in `data/sample/` (200 + 120 records): one
 standardization or phonetic rule per test, blocking, comparison, scoring, 1:1 resolution,
-evaluation, pseudonymization and the end-to-end flow. CI runs `ruff`, `pytest` and `make run` on
+evaluation, pseudonymization, classifiers and the end-to-end flow. CI runs `ruff`, `pytest` and `make run` on
 Python 3.10 and 3.12 on every push.
 
 ## 4. Results
@@ -263,6 +270,49 @@ The [report](https://agdala.github.io/record-linkage-kit/) also shows recall by 
 - records **without a date of birth** stay at 91.9% recall even with review: two of the three
   blocking rules depend on the year.
 
+### 4.6 Supervised classifier (machine learning)
+
+The weights of the weighted score (section 5.2) were chosen by hand. `rlk ml` measures whether
+models that learn the weights from labelled pairs do better under the same conditions (method in
+section 5.4). Each model must keep at least the automatic precision that the weighted score
+reaches on the training half (99.9%), with a review queue of the same size (99 pairs on the
+training half, the same reviewing capacity). The numbers below come from the test half, which
+no model saw: 868 B records with a pair and 68,610 candidate pairs
+([`reports/ml_metricas.json`](reports/ml_metricas.json)).
+
+| Method | Automatic false positives | Precision | Automatic recall | Review queue | Recall after review |
+|---|---|---|---|---|---|
+| Weighted score (thresholds 0.90 and 0.70) | 5, all twins | 99.4% | 95.3% | 81 pairs | 99.5% |
+| **Logistic regression** | **1** | **99.9%** | 94.8% | 66 pairs | 99.5% |
+| Logistic regression without the first name | 2 | 99.7% | 88.7% | 97 pairs | 98.8% |
+| Gradient boosting | 0 | 100.0% | 99.4% | 7 pairs | 99.5% |
+
+The 99.5% recall after review is the blocking ceiling on this half: the missing pairs were never
+compared.
+
+**What the numbers show:**
+
+- **Logistic regression avoids 4 wrong merges with a smaller queue.** False positives drop from 5
+  to 1, the queue drops from 81 to 66 pairs and recall after review stays the same. Automatic
+  recall drops 0.5 points: some true pairs move from automatic matching to review, which section
+  4.3 considers acceptable (merging two people costs more than reviewing a pair).
+- **Much of the gain comes from one new feature, the first-name similarity.** The weighted score
+  only compares the full name, where a different first name is diluted by the shared surnames.
+  That is the twin pattern from section 4.3. Without this feature, logistic regression loses 6
+  points of automatic recall and, with the same reviewing capacity, misses 6 more people (98.8%
+  against 99.5%).
+- **The learned weights can be read.** The largest logistic regression coefficients are the full
+  name (7.5), the mother's name (5.1), the first name (4.9), the document (4.5) and a different
+  date (-4.4). A reviewer can be told why a pair was accepted.
+- **Gradient boosting gets almost everything right, and that number deserves suspicion.** No false
+  positives and a queue of only 7 pairs look too good. The synthetic generator creates errors with
+  fixed rules, and a flexible model learns those rules. On real data, performance tends to be
+  lower (section 8), and the model is harder to explain to a reviewer.
+
+For real use, the choice would be logistic regression: a clear improvement over the hand-set
+weights, weights that can be audited and a model that is simple to explain. Gradient boosting
+should only be adopted if it repeated the result on a real sample labelled by reviewers.
+
 ## 5. How it works
 
 ### 5.1 Standardization ([`standardize.py`](src/rlk/standardize.py))
@@ -321,6 +371,25 @@ Recall is measured **per record in B**: a record with a pair counts as found if 
 record in A of the same person (the person may be duplicated in A). Blocking completeness measures
 the true pairs that were actually compared; it is the upper bound of recall.
 
+### 5.4 Supervised classifier ([`ml.py`](src/rlk/ml.py))
+
+- **Train and test split:** B records are split in half by a seeded hash of the id. Each person
+  appears once in B, so no person has pairs on both sides.
+- **Features:** the same similarities as the weighted score, a missing flag for each one (missing
+  is not the same as different), the date level as 0/1 columns and the Jaro-Winkler similarity of
+  the first name. Each candidate pair is labelled from the ground truth.
+- **Models (scikit-learn):** logistic regression, gradient boosting (`HistGradientBoosting`) and,
+  as a control, the same logistic regression without the first name, to separate the effect of the
+  new feature from the effect of learning the weights.
+- **Thresholds:** chosen on the training half only, over 5-fold cross-validated probabilities
+  grouped by B record. The match threshold is the lowest probability that keeps the weighted
+  score's training precision; the review threshold leaves in the queue the same number of pairs
+  the weighted score leaves on the training half. The model is then trained on the whole training
+  half and applied once to the test half, with the same 1:1 resolution as the main pipeline.
+- **Reproducibility:** logistic regression is solved to a tight tolerance (its optimum is unique),
+  gradient boosting runs a fixed number of trees and the probabilities are rounded to 4 decimals,
+  like the weighted score. The result does not change from one machine to another.
+
 ## 6. Data protection
 
 The project adopts the principles of the LGPD (purpose, necessity, security, minimization) as a
@@ -357,6 +426,9 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
 | **Greedy 1:1 resolution** | Simple, deterministic and sufficient when each person appears once in B. A single pass serves all the evaluation thresholds. |
 | **HMAC-SHA256 instead of SHA-256(salt + value)** | It is the standard construction for hashing with a secret and avoids the length-extension attack on plain SHA-256; it is still "SHA-256 with a secret salt". |
 | **Single HTML report, without external libraries** | SVG chart generated in Python, opens offline and is published on Pages as a single file. |
+| **Classifier compared on a test half split by person** | Choosing thresholds and measuring on the same set would inflate the result. Splitting by B record keeps the same person out of both training and test. |
+| **Classifier target equal to the weighted score's** | With the same minimum precision and the same reviewing capacity, the comparison focuses on what matters for operations: wrong merges, queue size and people found. |
+| **scikit-learn with a pinned version (`scikit-learn==1.7.2`)** | It is the latest version that runs on Python 3.10 and 3.12; CI checks that `ml_metricas.json` is reproduced on both. |
 | **`metricas.json` and `relatorio.html` versioned; CSVs with records outside Git** | The README numbers stay traceable without versioning tables with names, even synthetic ones. |
 
 ## 8. Limitations
@@ -372,8 +444,15 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
   must be a sample labelled by reviewers, separate from the one used for calibration.
 - **Synthetic data is more regular than real data.** The error rates were chosen, not measured on
   real bases; the numbers serve to compare methods, not to promise results.
-- **Weights and thresholds set by hand.** They were not estimated from the data (as in the
-  Fellegi-Sunter model); on a real base, they need to be calibrated on a labelled sample.
+- **Weights and thresholds set by hand** in the weighted score. Section 4.6 compares them with
+  learned weights, but estimating them without a ground truth (Fellegi-Sunter with EM) is still
+  missing; on a real base, they need to be calibrated on a labelled sample.
+- **The classifier learns from perfect labels.** The labels come from the ground truth. In real
+  use they would come from the review queue decisions (`decisao_revisor`), which contain errors and
+  only cover doubtful pairs. The probabilities were not calibrated either: they rank pairs, they
+  are not the actual chance of being the same person. With about 900 true pairs in each half, a
+  difference of one or two false positives between methods is within chance; the gap between 5 and
+  1 is more consistent, but should be confirmed with other seeds.
 - **Deduplication is too easy.** The internal duplicates of A have only 1 or 2 light errors, hence
   100% precision and recall. Real duplicates tend to be harder.
 - **Greedy 1:1 resolution** is not globally optimal and does not form clusters with more than two
@@ -394,6 +473,7 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
    Caveat: the rule also diverts to the queue true pairs whose first name has a typo or an
    abbreviation. The cost to the queue must be measured and published in `metricas.json` before
    adopting it, and the criterion may require low first-name similarity, not just a difference.
+   The classifier in section 4.6 shows that first-name similarity solves most of these cases.
 2. **Compare with Splink** on the same bases and with the same ground truth.
 3. **Fellegi-Sunter with EM:** estimate the m and u probabilities and the weights of each
    comparison level from the data, instead of fixed weights.
@@ -401,17 +481,19 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
 5. Clustering in deduplication, for people with three or more records.
 6. Approximate pseudonymized matching with Bloom filters (privacy-preserving record linkage).
 7. Measure inter-reviewer agreement in the review queue.
+8. Train the classifier on the reviewers' decisions, sending to the queue the pairs the model is
+   least sure about (active learning), and calibrate the probabilities.
 
 ## 10. Repository structure
 
 ```
 record-linkage-kit/
-├── src/rlk/            # generate, standardize, blocking, compare, link, evaluate, report, pseudonymize, cli
+├── src/rlk/            # generate, standardize, blocking, compare, link, evaluate, report, pseudonymize, ml, cli
 ├── config/             # default.yaml: blocking, weights, date levels, thresholds
 ├── tests/              # pytest with the synthetic sample
 ├── docs/               # protecao_de_dados.md
 ├── data/               # generated bases (outside Git), except data/sample/
-├── reports/            # metricas.json and relatorio.html versioned; other outputs outside Git
+├── reports/            # metricas.json, ml_metricas.json and relatorio.html versioned; other outputs outside Git
 └── .github/workflows/  # ci.yml (ruff + pytest + make run) and pages.yml (report on Pages)
 ```
 
