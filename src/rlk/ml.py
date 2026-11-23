@@ -83,10 +83,14 @@ def in_test(ids: pd.Series, fraction: float, seed: int) -> pd.Series:
 
 
 def make_model(kind: str, seed: int):
+    """Both models are set up to give the same result on any machine: the logistic regression is
+    solved to a tight tolerance (its optimum is unique), and gradient boosting runs a fixed number
+    of trees, without the early stopping that depends on an internal random validation split."""
     if kind == "logistica":
-        return LogisticRegression(C=1.0, max_iter=2000)
+        return LogisticRegression(C=1.0, solver="newton-cholesky", tol=1e-10, max_iter=1000)
     if kind == "boosting":
-        return HistGradientBoostingClassifier(max_iter=200, learning_rate=0.1, random_state=seed)
+        return HistGradientBoostingClassifier(max_iter=200, learning_rate=0.1,
+                                              early_stopping=False, random_state=seed)
     raise ValueError(f"Modelo desconhecido: {kind}")
 
 
@@ -113,9 +117,10 @@ def assign(pairs: pd.DataFrame, score: np.ndarray | pd.Series) -> pd.DataFrame:
 
 
 def choose_thresholds(assigned: pd.DataFrame, truth: set, n_true: int,
-                      min_precision: float, min_recall: float) -> dict:
+                      min_precision: float, queue_size: int) -> dict:
     """Auto-match threshold: the lowest score whose accepted pairs keep ``min_precision``.
-    Review threshold: the highest score whose pairs (auto + queue) reach ``min_recall``.
+    Review threshold: the one that puts ``queue_size`` pairs in the queue below the match
+    threshold, that is, the same reviewer capacity as the weighted score.
 
     Thresholds sit on observed scores, so every pair with the same score falls on the same side.
     """
@@ -127,12 +132,15 @@ def choose_thresholds(assigned: pd.DataFrame, truth: set, n_true: int,
     # only the last position of each block of equal scores is a valid cut
     last_of_tie = np.append(scores[1:] != scores[:-1], True)
     precision = tp / k
-    recall = tp / n_true
     ok_p = np.where(last_of_tie & (precision >= min_precision))[0]
-    match = float(scores[ok_p.max()]) if len(ok_p) else float(scores[0]) + 1e-9
-    ok_r = np.where(last_of_tie & (recall >= min_recall))[0]
-    review = float(scores[ok_r.min()]) if len(ok_r) else float(scores[-1])
-    return {"match": match, "revisao": min(review, match)}
+    if len(ok_p):
+        n_auto, match = ok_p.max() + 1, float(scores[ok_p.max()])
+    else:
+        n_auto, match = 0, float(scores[0]) + 1e-9
+    # last valid cut that keeps the queue within the capacity
+    ok_q = np.where(last_of_tie & (k <= n_auto + queue_size))[0]
+    review = float(scores[ok_q.max()]) if len(ok_q) and ok_q.max() + 1 > n_auto else match
+    return {"match": match, "revisao": review}
 
 
 def operating_point(assigned: pd.DataFrame, truth: set, n_true: int, thr: dict) -> dict:
@@ -187,11 +195,11 @@ def run_ml(cfg: dict, root: str | Path = ".") -> dict:
     y_tr, y_te = y[~test], y[test]
 
     # The hand-weighted score sets the bar, measured on the training half only: each model must
-    # keep at least its automatic precision and its recall after review.
+    # keep at least its automatic precision, with a review queue of the same size.
     rule_thr = {"match": cfg["limiares"]["match"], "revisao": cfg["limiares"]["revisao"]}
     rule_tr = operating_point(assign(tr, tr["pontuacao"]), truth, n_true["treino"], rule_thr)
     targets = {"precisao_minima": rule_tr["precisao"],
-               "recall_com_revisao_minimo": rule_tr["recall_com_revisao"]}
+               "fila_revisao": rule_tr["fila_revisao"]}
 
     results = {"regra_ponderada": {
         "nome": "Pontuação ponderada (pesos manuais)",
@@ -203,7 +211,7 @@ def run_ml(cfg: dict, root: str | Path = ".") -> dict:
         cols = [c for c in x.columns if c not in left_out]
         oof = out_of_fold(kind, x_tr[cols], y_tr, tr["id_2"], folds, seed)
         thr = choose_thresholds(assign(tr, oof), truth, n_true["treino"],
-                                targets["precisao_minima"], targets["recall_com_revisao_minimo"])
+                                targets["precisao_minima"], targets["fila_revisao"])
         model = make_model(kind, seed).fit(x_tr[cols], y_tr)
         prob = np.round(model.predict_proba(x_te[cols])[:, 1], DECIMALS)
         results[name] = {

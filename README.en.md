@@ -274,39 +274,40 @@ The [report](https://agdala.github.io/record-linkage-kit/) also shows recall by 
 
 The weights of the weighted score (section 5.2) were chosen by hand. `rlk ml` measures whether
 models that learn the weights from labelled pairs do better under the same conditions (method in
-section 5.4). The models must keep at least the automatic precision and the recall after review
-that the weighted score reaches on the training half (99.9% and 99.4%). The numbers below come
-from the test half, which no model saw: 868 B records with a pair and 68,610 candidate pairs
+section 5.4). Each model must keep at least the automatic precision that the weighted score
+reaches on the training half (99.9%), with a review queue of the same size (99 pairs on the
+training half, the same reviewing capacity). The numbers below come from the test half, which
+no model saw: 868 B records with a pair and 68,610 candidate pairs
 ([`reports/ml_metricas.json`](reports/ml_metricas.json)).
 
 | Method | Automatic false positives | Precision | Automatic recall | Review queue | Recall after review |
 |---|---|---|---|---|---|
 | Weighted score (thresholds 0.90 and 0.70) | 5, all twins | 99.4% | 95.3% | 81 pairs | 99.5% |
-| **Logistic regression** | **1** | **99.9%** | 94.7% | 84 pairs | 99.5% |
-| Logistic regression without the first name | 3 | 99.6% | 89.4% | 127 pairs | 99.5% |
-| Gradient boosting | 0 | 100.0% | 99.4% | 578 pairs | 99.5% |
+| **Logistic regression** | **1** | **99.9%** | 94.8% | 66 pairs | 99.5% |
+| Logistic regression without the first name | 2 | 99.7% | 88.7% | 97 pairs | 98.8% |
+| Gradient boosting | 0 | 100.0% | 99.4% | 7 pairs | 99.5% |
 
-Recall after review is the same on all four rows because it is already at the blocking ceiling:
-the missing pairs were never compared.
+The 99.5% recall after review is the blocking ceiling on this half: the missing pairs were never
+compared.
 
 **What the numbers show:**
 
-- **Almost all the gain comes from one new feature, the first-name similarity.** The weighted
-  score only compares the full name, where a different first name is diluted by the shared
-  surnames. That is the twin pattern from section 4.3. Without this feature, logistic regression
-  still accepts 3 twins and the queue grows to 127 pairs. With it, 1 false positive is left.
-- **Logistic regression avoids 4 wrong merges and sends 5 true pairs to review.** Automatic recall
-  drops 0.6 points and the queue goes from 81 to 84 pairs. Following section 4.3 (merging two
-  people costs more than reviewing a pair), the trade is worth it.
+- **Logistic regression avoids 4 wrong merges with a smaller queue.** False positives drop from 5
+  to 1, the queue drops from 81 to 66 pairs and recall after review stays the same. Automatic
+  recall drops 0.5 points: some true pairs move from automatic matching to review, which section
+  4.3 considers acceptable (merging two people costs more than reviewing a pair).
+- **Much of the gain comes from one new feature, the first-name similarity.** The weighted score
+  only compares the full name, where a different first name is diluted by the shared surnames.
+  That is the twin pattern from section 4.3. Without this feature, logistic regression loses 6
+  points of automatic recall and, with the same reviewing capacity, misses 6 more people (98.8%
+  against 99.5%).
 - **The learned weights can be read.** The largest logistic regression coefficients are the full
-  name (7.7), a different date (-5.6), the mother's name (5.2), the first name (5.2) and the
-  document (4.5). A reviewer can be told why a pair was accepted.
-- **Gradient boosting gets almost everything right automatically, but it does not help review.**
-  It gives practically zero probability to the few true pairs it does not accept. To reach the
-  same recall after review, the queue would have 578 pairs, seven times the weighted score's, to
-  find 1 more pair. An overconfident model fails exactly in the doubtful band, where the reviewer
-  needs help. Its automatic result also deserves suspicion: the synthetic generator creates errors
-  with fixed rules, and a flexible model learns those rules (section 8).
+  name (7.5), the mother's name (5.1), the first name (4.9), the document (4.5) and a different
+  date (-4.4). A reviewer can be told why a pair was accepted.
+- **Gradient boosting gets almost everything right, and that number deserves suspicion.** No false
+  positives and a queue of only 7 pairs look too good. The synthetic generator creates errors with
+  fixed rules, and a flexible model learns those rules. On real data, performance tends to be
+  lower (section 8), and the model is harder to explain to a reviewer.
 
 For real use, the choice would be logistic regression: a clear improvement over the hand-set
 weights, weights that can be audited and a model that is simple to explain. Gradient boosting
@@ -382,9 +383,12 @@ the true pairs that were actually compared; it is the upper bound of recall.
   new feature from the effect of learning the weights.
 - **Thresholds:** chosen on the training half only, over 5-fold cross-validated probabilities
   grouped by B record. The match threshold is the lowest probability that keeps the weighted
-  score's training precision; the review threshold is the highest that reaches its recall after
-  review. The model is then trained on the whole training half and applied once to the test half,
-  with the same 1:1 resolution as the main pipeline.
+  score's training precision; the review threshold leaves in the queue the same number of pairs
+  the weighted score leaves on the training half. The model is then trained on the whole training
+  half and applied once to the test half, with the same 1:1 resolution as the main pipeline.
+- **Reproducibility:** logistic regression is solved to a tight tolerance (its optimum is unique),
+  gradient boosting runs a fixed number of trees and the probabilities are rounded to 4 decimals,
+  like the weighted score. The result does not change from one machine to another.
 
 ## 6. Data protection
 
@@ -423,7 +427,7 @@ standardized keys from its own base and only the hashes are exchanged. Limits, d
 | **HMAC-SHA256 instead of SHA-256(salt + value)** | It is the standard construction for hashing with a secret and avoids the length-extension attack on plain SHA-256; it is still "SHA-256 with a secret salt". |
 | **Single HTML report, without external libraries** | SVG chart generated in Python, opens offline and is published on Pages as a single file. |
 | **Classifier compared on a test half split by person** | Choosing thresholds and measuring on the same set would inflate the result. Splitting by B record keeps the same person out of both training and test. |
-| **Classifier target equal to the weighted score's** | With the same precision and the same recall after review, the comparison focuses on what matters for operations: wrong merges and queue size. |
+| **Classifier target equal to the weighted score's** | With the same minimum precision and the same reviewing capacity, the comparison focuses on what matters for operations: wrong merges, queue size and people found. |
 | **scikit-learn with a pinned version (`scikit-learn==1.7.2`)** | It is the latest version that runs on Python 3.10 and 3.12; CI checks that `ml_metricas.json` is reproduced on both. |
 | **`metricas.json` and `relatorio.html` versioned; CSVs with records outside Git** | The README numbers stay traceable without versioning tables with names, even synthetic ones. |
 

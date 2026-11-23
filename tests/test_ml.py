@@ -58,10 +58,10 @@ def _assigned(scores, correct):
     return frame, truth
 
 
-def test_thresholds_meet_precision_and_recall_targets():
+def test_thresholds_meet_precision_and_queue_targets():
     frame, truth = _assigned([0.99, 0.95, 0.90, 0.80, 0.60, 0.40],
                              [True, True, False, True, True, False])
-    thr = choose_thresholds(frame, truth, n_true=4, min_precision=1.0, min_recall=1.0)
+    thr = choose_thresholds(frame, truth, n_true=4, min_precision=1.0, queue_size=3)
     assert thr == {"match": 0.95, "revisao": 0.60}
     op = operating_point(frame, truth, 4, thr)
     assert op["fp"] == 0 and op["pares_automaticos"] == 2
@@ -71,8 +71,9 @@ def test_thresholds_meet_precision_and_recall_targets():
 
 def test_thresholds_never_split_tied_scores():
     frame, truth = _assigned([0.9, 0.8, 0.8], [True, True, False])
-    thr = choose_thresholds(frame, truth, n_true=2, min_precision=1.0, min_recall=0.5)
+    thr = choose_thresholds(frame, truth, n_true=2, min_precision=1.0, queue_size=1)
     assert thr["match"] == 0.9  # cutting at 0.8 would accept the false pair tied with a true one
+    assert thr["revisao"] == 0.9  # the two tied pairs do not fit in a queue of one: no queue
 
 
 @pytest.fixture(scope="module")

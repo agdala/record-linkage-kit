@@ -267,39 +267,40 @@ O [relatório](https://agdala.github.io/record-linkage-kit/) traz ainda o recall
 
 Os pesos da pontuação ponderada (seção 5.2) foram escolhidos à mão. O comando `rlk ml` mede se
 modelos que aprendem os pesos a partir de pares rotulados fazem melhor nas mesmas condições
-(método na seção 5.4). Os modelos precisam manter, no mínimo, a precisão automática e o recall
-após revisão que a pontuação ponderada tem na metade de treino (99,9% e 99,4%). Os números abaixo
-são da metade de teste, que nenhum modelo viu: 868 registros de B com par e 68.610 pares
-candidatos ([`reports/ml_metricas.json`](reports/ml_metricas.json)).
+(método na seção 5.4). Cada modelo precisa manter, no mínimo, a precisão automática que a
+pontuação ponderada tem na metade de treino (99,9%), com uma fila de revisão do mesmo tamanho
+(99 pares no treino, a mesma capacidade de revisão). Os números abaixo são da metade de teste,
+que nenhum modelo viu: 868 registros de B com par e 68.610 pares candidatos
+([`reports/ml_metricas.json`](reports/ml_metricas.json)).
 
 | Método | Falsos positivos automáticos | Precisão | Recall automático | Fila de revisão | Recall após revisão |
 |---|---|---|---|---|---|
 | Pontuação ponderada (limiares 0,90 e 0,70) | 5, todos gêmeos | 99,4% | 95,3% | 81 pares | 99,5% |
-| **Regressão logística** | **1** | **99,9%** | 94,7% | 84 pares | 99,5% |
-| Regressão logística sem o primeiro nome | 3 | 99,6% | 89,4% | 127 pares | 99,5% |
-| Gradient boosting | 0 | 100,0% | 99,4% | 578 pares | 99,5% |
+| **Regressão logística** | **1** | **99,9%** | 94,8% | 66 pares | 99,5% |
+| Regressão logística sem o primeiro nome | 2 | 99,7% | 88,7% | 97 pares | 98,8% |
+| Gradient boosting | 0 | 100,0% | 99,4% | 7 pares | 99,5% |
 
-O recall após revisão é o mesmo nas quatro linhas porque já está no teto da blocagem: os pares que
-faltam nunca chegaram a ser comparados.
+O recall após revisão de 99,5% é o teto da blocagem nesta metade: os pares que faltam nunca
+chegaram a ser comparados.
 
 **O que os números mostram:**
 
-- **O ganho vem quase todo de uma variável nova, a similaridade do primeiro nome.** A pontuação
+- **A regressão logística evita 4 fusões indevidas com uma fila menor.** Os falsos positivos
+  caem de 5 para 1, a fila cai de 81 para 66 pares e o recall após revisão fica igual. O recall
+  automático cai 0,5 ponto: alguns pares verdadeiros saem do automático e vão para a revisão, o que
+  a seção 4.3 considera aceitável (fundir duas pessoas custa mais que revisar um par).
+- **Boa parte do ganho vem de uma variável nova, a similaridade do primeiro nome.** A pontuação
   ponderada só compara o nome completo, e nele um primeiro nome diferente fica diluído nos
   sobrenomes iguais. É o padrão dos gêmeos da seção 4.3. Sem essa variável, a regressão logística
-  ainda aceita 3 gêmeos e a fila sobe para 127 pares. Com ela, sobra 1 falso positivo.
-- **A regressão logística evita 4 fusões indevidas e manda 5 pares verdadeiros para a revisão.**
-  O recall automático cai 0,6 ponto e a fila passa de 81 para 84 pares. Pela lógica da seção 4.3
-  (fundir duas pessoas custa mais que revisar um par), a troca compensa.
+  perde 6 pontos de recall automático e, com a mesma capacidade de revisão, deixa de achar 6
+  pessoas (98,8% contra 99,5%).
 - **Os pesos aprendidos podem ser lidos.** Os maiores coeficientes da regressão logística são o
-  nome completo (7,7), a data diferente (-5,6), o nome da mãe (5,2), o primeiro nome (5,2) e o
-  documento (4,5). Dá para explicar a quem revisa a fila por que um par foi aceito.
-- **O gradient boosting acerta quase tudo no automático, mas não ajuda a revisão.** Ele dá
-  probabilidade praticamente zero aos poucos pares verdadeiros que não aceita. Para chegar ao mesmo
-  recall após revisão, a fila teria 578 pares, sete vezes a da pontuação ponderada, para achar 1
-  par a mais. Um modelo confiante demais falha justamente na faixa de dúvida, onde o revisor
-  precisa de ajuda. O acerto no automático também merece desconfiança: o gerador sintético cria
-  erros com regras fixas, e um modelo flexível aprende essas regras (seção 8).
+  nome completo (7,5), o nome da mãe (5,1), o primeiro nome (4,9), o documento (4,5) e a data
+  diferente (-4,4). Dá para explicar a quem revisa a fila por que um par foi aceito.
+- **O gradient boosting acerta quase tudo, e esse número merece desconfiança.** Nenhum falso
+  positivo e uma fila de só 7 pares parecem bons demais. O gerador sintético cria erros com regras
+  fixas, e um modelo flexível aprende essas regras. Em dados reais o desempenho tende a ser pior
+  (seção 8), e o modelo é mais difícil de explicar a quem revisa.
 
 Para uso real, a escolha seria a regressão logística: melhora clara sobre os pesos manuais, pesos
 que dá para auditar e um modelo simples de explicar. O gradient boosting só deveria ser adotado
@@ -375,9 +376,12 @@ blocagem mede os pares verdadeiros que chegaram a ser comparados; ela é o teto 
   variável nova do efeito de aprender os pesos.
 - **Limiares:** escolhidos só no treino, sobre probabilidades de validação cruzada em 5 partes,
   agrupadas por registro de B. O limiar de match é a menor probabilidade que mantém a precisão da
-  pontuação ponderada no treino; o de revisão é a maior que alcança o recall após revisão dela.
-  Depois disso o modelo é treinado com todo o treino e aplicado uma única vez ao teste, com a
-  mesma resolução 1:1 do fluxo principal.
+  pontuação ponderada no treino; o de revisão deixa na fila o mesmo número de pares que ela deixa
+  no treino. Depois disso o modelo é treinado com todo o treino e aplicado uma única vez ao teste,
+  com a mesma resolução 1:1 do fluxo principal.
+- **Reprodutibilidade:** a regressão logística é resolvida com tolerância apertada (o ótimo é
+  único), o gradient boosting roda um número fixo de árvores e as probabilidades são arredondadas
+  para 4 casas, como a pontuação ponderada. Assim o resultado não muda de uma máquina para outra.
 
 ## 6. Proteção de dados
 
@@ -416,7 +420,7 @@ chaves padronizadas da própria base e só os hashes são trocados. Limites, det
 | **HMAC-SHA256 em vez de SHA-256(sal + valor)** | É a construção padrão para hash com segredo e evita o ataque de extensão de comprimento do SHA-256 puro; continua sendo "SHA-256 com sal secreto". |
 | **Relatório HTML único, sem bibliotecas externas** | Gráfico em SVG gerado em Python, abre offline e é publicado no Pages como um arquivo só. |
 | **Classificador comparado em metade de teste separada por pessoa** | Escolher limiares e medir no mesmo conjunto inflaria o resultado. A divisão por registro de B impede que a mesma pessoa apareça no treino e no teste. |
-| **Meta do classificador igual à da pontuação ponderada** | Com a mesma precisão e o mesmo recall após revisão, a comparação fica no que importa para a operação: fusões indevidas e tamanho da fila. |
+| **Meta do classificador igual à da pontuação ponderada** | Com a mesma precisão mínima e a mesma capacidade de revisão, a comparação fica no que importa para a operação: fusões indevidas, tamanho da fila e pessoas encontradas. |
 | **scikit-learn com versão fixa (`scikit-learn==1.7.2`)** | É a última versão que roda em Python 3.10 e 3.12; o CI confere que `ml_metricas.json` se reproduz nas duas. |
 | **`metricas.json` e `relatorio.html` versionados; CSVs com registros fora do Git** | Os números do README ficam rastreáveis sem versionar tabelas com nomes, mesmo sintéticos. |
 
@@ -509,7 +513,7 @@ mode (salted SHA-256 via HMAC, salt kept in an environment variable) links witho
 names, at **100% precision and 83.6% recall**: the measured cost of losing approximate matching.
 A supervised comparison (`rlk ml`, scikit-learn) trains logistic regression and gradient boosting
 on half of list B and tests on the other half: logistic regression cuts automatic false positives
-from 5 to 1 at the same review recall, mostly thanks to a first-name similarity feature.
+from 5 to 1 with a smaller review queue, largely thanks to a first-name similarity feature.
 The evaluation report is published on GitHub Pages; CI runs ruff, pytest and the full pipeline and
 checks that the published metrics are reproduced.
 
